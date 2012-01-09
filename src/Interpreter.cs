@@ -355,6 +355,7 @@ namespace MathsLanguage
                 switch (firstSymbolStr)
                 {
                     case "let":
+                        if (group.Count == 1) return new MException(this, "Could not assign variable", "no variable name given");
                         string variableName = group[1] as string;
                         if (variableName == null)
                         {
@@ -374,6 +375,8 @@ namespace MathsLanguage
                                 else return exception;
                             }
                         }
+
+                        if (group.Count == 2) return new MException(this, "Variable could not be assigned a value");
                         string assignmentOperator = group[2] as string;
                         if (assignmentOperator == null)
                         {
@@ -383,9 +386,12 @@ namespace MathsLanguage
 
                             MParameterList paramList = new MParameterList();
                             bool commaExpected = false;
-                            foreach (object o in paramGroup)
+                            for (int i = 0; i < paramGroup.Count; ++i)
                             {
-                                string paramName = o as string;
+                                if (commaExpected && (i == paramGroup.Count - 1))
+                                    return new MException(this, "Parameters could not be parsed", "last parameter missing");
+
+                                string paramName = paramGroup[i] as string;
 
                                 if (commaExpected && (paramName != ",")) paramName = null;
                                 
@@ -396,12 +402,15 @@ namespace MathsLanguage
                                 commaExpected = !commaExpected;
                             }
 
-                            assignmentOperator = group[3] as string;
                             MException exception = new MException(this, "Function could not be given a body",
                                 "function body must be given");
+
+                            if (group.Count == 3) return exception;
+                            assignmentOperator = group[3] as string;
                             if (assignmentOperator == null) return exception;
                             else if (assignmentOperator != "=") return exception;
 
+                            if (group.Count == 4) return exception;
                             Group funcBody = new Group(null);
                             funcBody.AddRange(group.GetRange(4, group.Count - 4));
 
@@ -412,11 +421,15 @@ namespace MathsLanguage
                             return function;
                         }
                         
-                        if (assignmentOperator != "=") return new MException(this, "Variable could not be assigned a value",
-                            "value to assign to variable must be given");
                         {
+                            MException exception = new MException(this, "Variable could not be assigned a value",
+                                "value to assign to variable must be given");
+
+                            if (assignmentOperator != "=") return exception;
+                            if (group.Count == 3) return exception;
                             Group valueGroup = new Group(null);
                             valueGroup.AddRange(group.GetRange(3, group.Count - 3));
+
                             MType value = ParseGroup(valueGroup);
                             if (value is MException) return value;
 
