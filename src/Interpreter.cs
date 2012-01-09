@@ -131,7 +131,7 @@ namespace MathsLanguage
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
-            "let", "yes", "no", "nil"
+            "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "for"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=",  "\"", "{", "}", "[", "]", "(", ")",
@@ -451,7 +451,52 @@ namespace MathsLanguage
                         }
 
                     case "when":
-                        break;
+                        {
+                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                                "when statement must be given a condition");
+
+                            int commaIndex = group.IndexOf(",");
+                            if (commaIndex < 0) return new MException(this, "when statment invalid",
+                                "comma required after condition");
+
+                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                                "when statement must be given a condition");
+
+                            Group conditionGroup = new Group(null);
+                            conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
+                            
+                            MType value = ParseGroup(conditionGroup);
+                            if (value is MException) return value;
+
+                            MBoolean result = value as MBoolean;
+                            if (result == null) return new MException(this, "Condition does not evaluate to a boolean value",
+                                "yes or no");
+
+                            if (group.Count > commaIndex)
+                            {
+                                int otherwiseIndex = group.IndexOf("otherwise", commaIndex + 1);
+                                if (result.Value)
+                                {
+                                    Group statementGroup = new Group(null);
+                                    if (otherwiseIndex < 0)
+                                        statementGroup.AddRange(group.GetRange(commaIndex + 1, group.Count - (commaIndex + 1)));
+                                    else statementGroup.AddRange(group.GetRange(commaIndex + 1, otherwiseIndex - (commaIndex + 1)));
+
+                                    if (statementGroup.Count > 0) return ParseGroup(statementGroup);
+                                }
+                                else if (otherwiseIndex >= 0)
+                                {
+                                    Group statementGroup = new Group(null);
+                                    statementGroup.AddRange(group.GetRange(otherwiseIndex + 1, group.Count - (otherwiseIndex + 1)));
+                                    if (statementGroup.Count > 0) return ParseGroup(statementGroup);
+                                } else return result;
+                            }
+                            
+                            {
+                                // do block stuff
+                                return result;
+                            }
+                        }
 
                     case "begin":
                         break;
