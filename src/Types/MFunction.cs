@@ -131,6 +131,8 @@ namespace MathsLanguage.Types
             }
 
             interpreter.Stack.Push();
+            int stackLevel = interpreter.Stack.Level;
+
             if (argNames == null)
             {
                 for (int i = 0; i < argList.Count; ++i) interpreter.Stack.AddVariable(new MVariable("arg" + i.ToString(), argList[i]));
@@ -142,7 +144,13 @@ namespace MathsLanguage.Types
 
 
             MType returnValue;
-            if (hardCodedFunction == null) returnValue = interpreter.Interpret(customFunction, true);
+            if (hardCodedFunction == null)
+            {
+                // loop through statements in block ////
+                returnValue = interpreter.Interpret(customFunction, true);
+                if (interpreter.Stack.Level < stackLevel) return returnValue;
+                //////
+            }
             else returnValue = hardCodedFunction.Invoke(interpreter, argList);
 
             MVariable variable = returnValue as MVariable;

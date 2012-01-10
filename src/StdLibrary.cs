@@ -51,7 +51,7 @@ namespace MathsLanguage
         public static MType Exit(Interpreter interpreter, MArgumentList args)
         {
             if (interpreter.Stack.Level == 1) interpreter.Kill();
-            else ; //break out of function
+            else interpreter.Stack.Pop();
             if (args.Count > 0) return args[0];
             return new MNil();
         }
