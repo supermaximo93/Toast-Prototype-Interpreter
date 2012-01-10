@@ -161,7 +161,7 @@ namespace MathsLanguage
         {
             command = command.Trim();
 
-            if ((command == "exit") || (command == "quit")) return new MException(this, "Halting interpreter execution");
+            if (command == "quit") return new MException(this, "Halting interpreter execution");
             else if (command == "")
             {
                 ++currentLine;
@@ -281,36 +281,6 @@ namespace MathsLanguage
         {
             if (group.Count == 0) return new MArgumentList();
 
-            int index;
-
-            while ((index = group.LastIndexOf(MType.REFERENCE_CHARACTER.ToString())) >= 0)
-            {
-                if (index + 1 > group.Count)
-                    return new MException(this, "Invalid expression term '" + MType.REFERENCE_CHARACTER + "' at end of statement");
-
-                MType variable = MType.Parse(this, group[index + 1]);
-                if (variable is MException) return variable;
-                if (!(variable is MVariable)) return new MException(this, "Attempted creation of reference to value", "expected variable identifier");
-
-                group[index] = new MVariable("reference", variable);
-                group.RemoveAt(index + 1);
-            }
-
-            while ((index = group.LastIndexOf(MType.DEREFERENCE_CHARACTER.ToString())) >= 0)
-            {
-                if (index + 1 > group.Count)
-                    return new MException(this, "Invalid expression term '" + MType.DEREFERENCE_CHARACTER + "' at end of statement");
-
-                MType variable = MType.Parse(this, group[index + 1]);
-                if (variable is MException) return variable;
-                if (!(variable is MVariable)) return new MException(this, "Attempted dereference of value", "expected variable identifier");
-
-                group[index] = ((MVariable)variable).Value;
-                if (!((MType)group[index] is MVariable) && !((MType)group[index] is MFunction))
-                    return new MException(this, "Dereference of value type variable", "expected reference variable");
-                group.RemoveAt(index + 1);
-            }
-
             string firstSymbolStr = group[0] as string;
             if (firstSymbolStr != null)
             {
@@ -355,6 +325,43 @@ namespace MathsLanguage
                 switch (firstSymbolStr)
                 {
                     case "let":
+                        
+                        int equalsIndex = group.IndexOf("=");
+                        if (equalsIndex < 0) return new MException(this, "Variable or function could not be assigned a value");
+                        int refIndex;
+
+                        while ((refIndex = group.IndexOf(MType.REFERENCE_CHARACTER.ToString())) >= 0)
+                        {
+                            if (refIndex > equalsIndex) break;
+                            if (refIndex + 1 > group.Count)
+                                return new MException(this, "Invalid expression term '" + MType.REFERENCE_CHARACTER + "'");
+
+                            MType variable = MType.Parse(this, group[refIndex + 1]);
+                            if (variable is MException) return variable;
+                            if (!(variable is MVariable)) return new MException(this, "Attempted creation of reference to value",
+                                "expected variable identifier");
+
+                            group[refIndex] = new MVariable("reference", variable);
+                            group.RemoveAt(refIndex + 1);
+                        }
+
+                        while ((refIndex = group.IndexOf(MType.DEREFERENCE_CHARACTER.ToString())) >= 0)
+                        {
+                            if (refIndex > equalsIndex) break;
+                            if (refIndex + 1 > group.Count)
+                                return new MException(this, "Invalid expression term '" + MType.DEREFERENCE_CHARACTER + "'");
+
+                            MType variable = MType.Parse(this, group[refIndex + 1]);
+                            if (variable is MException) return variable;
+                            if (!(variable is MVariable)) return new MException(this, "Attempted dereference of value",
+                                "expected variable identifier");
+
+                            group[refIndex] = ((MVariable)variable).Value;
+                            if (!((MType)group[refIndex] is MVariable) && !((MType)group[refIndex] is MFunction))
+                                return new MException(this, "Dereference of value type variable", "expected reference variable");
+                            group.RemoveAt(refIndex + 1);
+                        }
+
                         if (group.Count == 1) return new MException(this, "Could not assign variable", "no variable name given");
                         string variableName = group[1] as string;
                         if (variableName == null)
@@ -394,7 +401,7 @@ namespace MathsLanguage
                                 string paramName = paramGroup[i] as string;
 
                                 if (commaExpected && (paramName != ",")) paramName = null;
-                                
+
                                 if (paramName == null) return new MException(this, "Parameters could not be parsed",
                                     "invalid parameter name given");
 
@@ -420,7 +427,6 @@ namespace MathsLanguage
 
                             return function;
                         }
-                        
                         {
                             MException exception = new MException(this, "Variable could not be assigned a value",
                                 "value to assign to variable must be given");
@@ -439,6 +445,12 @@ namespace MathsLanguage
                             variable = stack.FindVariable(variableName);
                             if (value == variable) return new MException(this, "Illegal assignment attempted",
                                 "variables cannot reference themselves");
+                            MVariable circularRefCheckVar = value as MVariable;
+                            if (circularRefCheckVar != null)
+                            {
+                                if (circularRefCheckVar.Value == variable)
+                                    return new MException(this, "Illegal assignment attempted", "circular reference detected");
+                            }
 
                             if (variable == null)
                             {
@@ -560,6 +572,36 @@ namespace MathsLanguage
                         }
                     }
                 }
+            }
+
+            int index;
+
+            while ((index = group.LastIndexOf(MType.REFERENCE_CHARACTER.ToString())) >= 0)
+            {
+                if (index + 1 > group.Count)
+                    return new MException(this, "Invalid expression term '" + MType.REFERENCE_CHARACTER + "' at end of statement");
+
+                MType variable = MType.Parse(this, group[index + 1]);
+                if (variable is MException) return variable;
+                if (!(variable is MVariable)) return new MException(this, "Attempted creation of reference to value", "expected variable identifier");
+
+                group[index] = new MVariable("reference", variable);
+                group.RemoveAt(index + 1);
+            }
+
+            while ((index = group.LastIndexOf(MType.DEREFERENCE_CHARACTER.ToString())) >= 0)
+            {
+                if (index + 1 > group.Count)
+                    return new MException(this, "Invalid expression term '" + MType.DEREFERENCE_CHARACTER + "' at end of statement");
+
+                MType variable = MType.Parse(this, group[index + 1]);
+                if (variable is MException) return variable;
+                if (!(variable is MVariable)) return new MException(this, "Attempted dereference of value", "expected variable identifier");
+
+                group[index] = ((MVariable)variable).Value;
+                if (!((MType)group[index] is MVariable) && !((MType)group[index] is MFunction))
+                    return new MException(this, "Dereference of value type variable", "expected reference variable");
+                group.RemoveAt(index + 1);
             }
 
             while ((index = group.IndexOf("-")) >= 0)

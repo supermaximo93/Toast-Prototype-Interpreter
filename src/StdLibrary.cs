@@ -17,6 +17,7 @@ namespace MathsLanguage
             functions = new Dictionary<string, MFunction>();
             functions.Add(PRINT_NAME, new MFunction(PRINT_NAME, Print, null, null));
             functions.Add(READ_NAME, new MFunction(READ_NAME, Read, new string[0], null));
+            functions.Add(EXIT_NAME, new MFunction(EXIT_NAME, Exit, new string[] { "returnValue" }, new MType[] { new MNil() }));
         }
 
         public static MFunction GetFunction(string functionName)
@@ -44,6 +45,15 @@ namespace MathsLanguage
         public static MType Read(Interpreter interpreter, MArgumentList args)
         {
             return MType.Parse(interpreter, System.Console.ReadLine());
+        }
+
+        public const string EXIT_NAME = "exit";
+        public static MType Exit(Interpreter interpreter, MArgumentList args)
+        {
+            if (interpreter.Stack.Level == 1) interpreter.Kill();
+            else ; //break out of function
+            if (args.Count > 0) return args[0];
+            return new MNil();
         }
     }
 }
