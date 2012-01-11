@@ -57,8 +57,9 @@ namespace MathsLanguage
         private bool strict;
         public bool Strict { get { return strict; } }
 
-        private bool runningFromFile;
-        public bool RunningFromFile { get { return runningFromFile; } }
+        System.IO.StreamReader file;
+        public bool RunningFromFile { get { return file != null; } }
+        private bool runningFromCommandLine;
 
         private int currentLine;
         public int CurrentLine { get { return currentLine; } }
@@ -69,8 +70,6 @@ namespace MathsLanguage
             get { return currentBlock; }
             set { currentBlock = value; }
         }
-
-        System.IO.StreamReader file;
 
         public Interpreter()
         {
@@ -87,14 +86,16 @@ namespace MathsLanguage
         public void Run(string fileName)
         {
             fileName = fileName.Trim();
-            runningFromFile = (fileName != "");
-            if (runningFromFile)
+            if (fileName == "") runningFromCommandLine = true;
+            else
             {
+                runningFromCommandLine = false;
                 if (System.IO.File.Exists(fileName)) file = System.IO.File.OpenText(fileName);
                 else
                 {
-                    System.Console.WriteLine("File '{0}' not found. Running interpreter from command line", fileName);
-                    runningFromFile = false;
+                    System.Console.WriteLine("File '{0}' not found", fileName);
+                    System.Console.ReadLine();
+                    return;
                 }
             }
             
@@ -105,6 +106,16 @@ namespace MathsLanguage
             System.Console.ReadLine();
         }
 
+        public void LoadFile(string fileName)
+        {
+            fileName = fileName.Trim();
+            if (fileName != "")
+            {
+                if (System.IO.File.Exists(fileName)) file = System.IO.File.OpenText(fileName);
+                else System.Console.WriteLine("File '{0}' not found", fileName);
+            }
+        }
+
         public string GetInput()
         {
             if (currentBlock != null)
@@ -112,7 +123,7 @@ namespace MathsLanguage
                 ++currentLine;
                 return currentBlock.GetInput();
             }
-            else if (runningFromFile)
+            else if (RunningFromFile)
             {
                 ++currentLine;
                 return file.EndOfStream ? "quit" : file.ReadLine();
@@ -163,8 +174,18 @@ namespace MathsLanguage
         public MType Interpret(string command, bool isFunctionCall = false)
         {
             command = command.Trim();
-            
-            if (command == "quit") return new MException(this, "Halting interpreter execution");            
+
+            if (command == "quit")
+            {
+                if (RunningFromFile && runningFromCommandLine)
+                {
+                    file.Close();
+                    file = null;
+                    System.Console.WriteLine();
+                    return new MNil();
+                }
+                return new MException(this, "Halting interpreter execution");
+            }
             if (command == "") return new MNil();
 
             List<string> strings = new List<string>();
@@ -269,12 +290,12 @@ namespace MathsLanguage
                 MException exception = value as MException;
                 if (exception == null)
                 {
-                    if (!runningFromFile) System.Console.WriteLine("-> {0}", value.ToCSString());
+                    if (!RunningFromFile) System.Console.WriteLine("-> {0}", value.ToCSString());
                 }
                 else System.Console.WriteLine(exception.ToCSString());
             }
 
-            if ((currentBlock == null) && !runningFromFile) System.Console.WriteLine();
+            if ((currentBlock == null) && !RunningFromFile) System.Console.WriteLine();
             return new MNil();
         }
 

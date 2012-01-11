@@ -36,7 +36,9 @@ namespace MathsLanguage.Types
         {
             if (obj is string)
             {
-                string str = (string)obj;
+                string str = ((string)obj).Trim();
+                if (str == "") return new MNil();
+
                 if ((str == "yes") || (str == "no")) return new MBoolean(str);
                 if (str == "nil") return new MNil();
 

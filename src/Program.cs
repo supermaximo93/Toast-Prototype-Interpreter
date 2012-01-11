@@ -11,7 +11,7 @@ namespace MathsLanguage
         {
             MathsLanguage.Types.MFunction.Init();
             Interpreter interpreter = new Interpreter();
-            interpreter.Run("test.ms");
+            interpreter.Run(args.Length > 0 ? args[0] : "");
         }
     }
 }
