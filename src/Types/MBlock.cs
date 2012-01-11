@@ -9,11 +9,13 @@ namespace MathsLanguage.Types
     {
         List<string> statements;
         int otherwiseLocation, currentLine;
+        bool isOtherwiseBlock;
 
-        public MBlock(Interpreter interpreter, out MException exception)
+        public MBlock(Interpreter interpreter, out MException exception, bool isOtherwiseBlock = false)
         {
             statements = new List<string>();
             otherwiseLocation = -1;
+            this.isOtherwiseBlock = isOtherwiseBlock;
             exception = null;
             currentLine = -1;
 
@@ -23,14 +25,32 @@ namespace MathsLanguage.Types
                 string statement = interpreter.GetInput().Trim();
 
                 if (statement.IndexOf("begin") >= 0) ++blockLevel;
+                else if (statement.IndexOf("when") >= 0)
+                {
+                    int commaIndex = statement.IndexOf(",");
+                    if (commaIndex == statement.Length - 1) ++blockLevel;
+                }
                 else if (statement.IndexOf("end") >= 0)
                 {
                     if (blockLevel == 0) break;
                     else --blockLevel;
                 }
-                else if ((statement == "otherwise") && (blockLevel == 0))
+
+                int otherwiseIndex;
+                if (((otherwiseIndex = statement.IndexOf("otherwise")) >= 0) && (blockLevel == 0)) // otherwise with when possible
                 {
-                    if (otherwiseLocation < 0) otherwiseLocation = statements.Count;
+                    if ((otherwiseLocation < 0) && !isOtherwiseBlock)
+                    {
+                        otherwiseLocation = statements.Count;
+                        if (otherwiseIndex + 9 < statement.Length - 1)
+                        {
+                            statements.Add("otherwise");
+                            statements.Add(statement.Remove(0, 9));
+
+                            if (blockLevel == 0) break;
+                            else --blockLevel;
+                        }
+                    }
                     else
                     {
                         exception = new MException(interpreter, "Unexpected keyword 'otherwise'", "otherwise already used");
@@ -59,15 +79,23 @@ namespace MathsLanguage.Types
 
             MType returnValue = null;
             int start, end;
-            if (beforeOtherwise)
+            if (isOtherwiseBlock)
             {
                 start = 0;
-                end = (otherwiseLocation > 0 ? otherwiseLocation : statements.Count) - 1;
+                end = statements.Count - 1;
             }
             else
             {
-                start = otherwiseLocation + 1;
-                end = statements.Count - 1;
+                if (beforeOtherwise)
+                {
+                    start = 0;
+                    end = (otherwiseLocation > 0 ? otherwiseLocation : statements.Count) - 1;
+                }
+                else
+                {
+                    start = otherwiseLocation + 1;
+                    end = statements.Count - 1;
+                }
             }
 
             MBlock previousCurrentBlock = interpreter.CurrentBlock;

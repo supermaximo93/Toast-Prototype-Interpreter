@@ -509,6 +509,15 @@ namespace MathsLanguage
                             if (group.Count > commaIndex + 1)
                             {
                                 int otherwiseIndex = group.IndexOf("otherwise", commaIndex + 1);
+
+                                MBlock otherwiseBlock = null;
+                                if (otherwiseIndex == group.Count - 1)
+                                {
+                                    MException exception;
+                                    otherwiseBlock = new MBlock(this, out exception, true);
+                                    if (exception != null) return exception;
+                                }
+
                                 if (result.Value)
                                 {
                                     Group statementGroup = new Group(null);
@@ -520,9 +529,13 @@ namespace MathsLanguage
                                 }
                                 else if (otherwiseIndex >= 0)
                                 {
-                                    Group statementGroup = new Group(null);
-                                    statementGroup.AddRange(group.GetRange(otherwiseIndex + 1, group.Count - (otherwiseIndex + 1)));
-                                    if (statementGroup.Count > 0) return ParseGroup(statementGroup);
+                                    if (otherwiseBlock == null)
+                                    {
+                                        Group statementGroup = new Group(null);
+                                        statementGroup.AddRange(group.GetRange(otherwiseIndex + 1, group.Count - (otherwiseIndex + 1)));
+                                        if (statementGroup.Count > 0) return ParseGroup(statementGroup);
+                                    }
+                                    else return otherwiseBlock.Execute(this);
                                 }
                                 else return result;
                             }
