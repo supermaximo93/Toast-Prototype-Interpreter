@@ -9,75 +9,23 @@ namespace MathsLanguage
 {
     class Interpreter
     {
-        private bool alive;
-
-        private bool strict;
-        public bool Strict { get { return strict; } }
-
-        private int currentLine;
-        public int CurrentLine { get { return currentLine; } }
-
         public class ProgramStack
         {
-            private class ScopeStack
-            {
-
-                private Stack<Dictionary<string, MVariable>> stack;
-
-                private int level;
-                public int Level { get { return level; } }
-
-                public ScopeStack()
-                {
-                    stack = new Stack<Dictionary<string, MVariable>>();
-                    stack.Push(new Dictionary<string, MVariable>());
-                    level = 0;
-                }
-
-                public void Push()
-                {
-                    stack.Push(new Dictionary<string, MVariable>());
-                    ++level;
-                }
-
-                public void Pop()
-                {
-                    if (level == 0) return;
-                    stack.Pop();
-                    --level;
-                }
-
-                public void AddVariable(MVariable variable)
-                {
-                    stack.Peek().Add(variable.Identifier, variable);
-                }
-
-                public MVariable FindVariable(string name)
-                {
-                    MVariable variable;
-                    for (int i = level; i >= 0; --i)
-                    {
-                        if (stack.ElementAt(i).TryGetValue(name, out variable)) return variable;
-                    }
-                    return null;
-                }
-            }
-
-            private Stack<ScopeStack> stack;
+            private Stack<Dictionary<string, MVariable>> stack;
 
             private int level;
             public int Level { get { return level; } }
 
             public ProgramStack()
             {
-                stack = new Stack<ScopeStack>();
-                stack.Push(new ScopeStack());
+                stack = new Stack<Dictionary<string, MVariable>>();
+                stack.Push(new Dictionary<string, MVariable>());
                 level = 0;
             }
 
             public void Push()
             {
-                stack.Push(new ScopeStack());
+                stack.Push(new Dictionary<string, MVariable>());
                 ++level;
             }
 
@@ -90,36 +38,91 @@ namespace MathsLanguage
 
             public void AddVariable(MVariable variable)
             {
-                stack.Peek().AddVariable(variable);
+                stack.Peek().Add(variable.Identifier, variable);
             }
 
             public MVariable FindVariable(string name)
             {
-                return stack.Peek().FindVariable(name);
+                MVariable variable;
+                if (stack.Peek().TryGetValue(name, out variable)) return variable;
+                return null;
             }
         }
 
         private ProgramStack stack;
         public ProgramStack Stack { get { return stack; } }
 
+        private bool alive;
+
+        private bool strict;
+        public bool Strict { get { return strict; } }
+
+        private bool runningFromFile;
+        public bool RunningFromFile { get { return runningFromFile; } }
+
+        private int currentLine;
+        public int CurrentLine { get { return currentLine; } }
+
+        MBlock currentBlock;
+        public MBlock CurrentBlock
+        {
+            get { return currentBlock; }
+            set { currentBlock = value; }
+        }
+
+        System.IO.StreamReader file;
+
         public Interpreter()
         {
+            stack = new ProgramStack();
             alive = true;
             strict = false;
             currentLine = 0;
-            stack = new ProgramStack();
+            currentBlock = null;
+            file = null;
 
             System.Console.WriteLine("Maths Language Interpreter version 0.1 by Max Foster\n");
         }
 
-        public void Run()
+        public void Run(string fileName)
         {
-            do
+            fileName = fileName.Trim();
+            runningFromFile = (fileName != "");
+            if (runningFromFile)
+            {
+                if (System.IO.File.Exists(fileName)) file = System.IO.File.OpenText(fileName);
+                else
+                {
+                    System.Console.WriteLine("File '{0}' not found. Running interpreter from command line", fileName);
+                    runningFromFile = false;
+                }
+            }
+            
+            while ((Interpret(GetInput()).TypeName != MType.M_EXCEPTION_TYPENAME) && alive) ;
+
+            if (file != null) file.Close();
+            System.Console.WriteLine("\nInterpreter execution halted");
+            System.Console.ReadLine();
+        }
+
+        public string GetInput()
+        {
+            if (currentBlock != null)
+            {
+                ++currentLine;
+                return currentBlock.GetInput();
+            }
+            else if (runningFromFile)
+            {
+                ++currentLine;
+                return file.EndOfStream ? "quit" : file.ReadLine();
+            }
+            else
             {
                 System.Console.Write("{0} > ", currentLine);
-            } while ((Interpret(System.Console.ReadLine()).TypeName != MType.M_EXCEPTION_TYPENAME) && alive);
-
-            System.Console.WriteLine("Interpreter execution halted");
+                ++currentLine;
+                return System.Console.ReadLine();
+            }
         }
 
         public void Kill()
@@ -152,7 +155,7 @@ namespace MathsLanguage
             public override string ToString()
             {
                 string returnStr = "( ";
-                for (int i = 0; i < Count; ++i) returnStr += this[i]+" ";
+                for (int i = 0; i < Count; ++i) returnStr += this[i] + " ";
                 return returnStr + ")";
             }
         }
@@ -160,13 +163,9 @@ namespace MathsLanguage
         public MType Interpret(string command, bool isFunctionCall = false)
         {
             command = command.Trim();
-
-            if (command == "quit") return new MException(this, "Halting interpreter execution");
-            else if (command == "")
-            {
-                ++currentLine;
-                return new MNil();
-            }
+            
+            if (command == "quit") return new MException(this, "Halting interpreter execution");            
+            if (command == "") return new MNil();
 
             List<string> strings = new List<string>();
             int index = -1;
@@ -268,12 +267,14 @@ namespace MathsLanguage
                 if (isFunctionCall) return value;
 
                 MException exception = value as MException;
-                if (exception == null) System.Console.WriteLine("-> {0}", value.ToCSString());
+                if (exception == null)
+                {
+                    if (!runningFromFile) System.Console.WriteLine("-> {0}", value.ToCSString());
+                }
                 else System.Console.WriteLine(exception.ToCSString());
             }
 
-            System.Console.WriteLine();
-            ++currentLine;
+            if ((currentBlock == null) && !runningFromFile) System.Console.WriteLine();
             return new MNil();
         }
 
@@ -476,7 +477,7 @@ namespace MathsLanguage
 
                             Group conditionGroup = new Group(null);
                             conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
-                            
+
                             MType value = ParseGroup(conditionGroup);
                             if (value is MException) return value;
 
@@ -484,7 +485,7 @@ namespace MathsLanguage
                             if (result == null) return new MException(this, "Condition does not evaluate to a boolean value",
                                 "yes or no");
 
-                            if (group.Count > commaIndex)
+                            if (group.Count > commaIndex + 1)
                             {
                                 int otherwiseIndex = group.IndexOf("otherwise", commaIndex + 1);
                                 if (result.Value)
@@ -501,23 +502,32 @@ namespace MathsLanguage
                                     Group statementGroup = new Group(null);
                                     statementGroup.AddRange(group.GetRange(otherwiseIndex + 1, group.Count - (otherwiseIndex + 1)));
                                     if (statementGroup.Count > 0) return ParseGroup(statementGroup);
-                                } else return result;
+                                }
+                                else return result;
                             }
-                            
+
                             {
-                                // do block stuff
-                                return result;
+                                MException exception;
+                                MBlock block = new MBlock(this, out exception);
+                                if (exception != null) return exception;
+                                if (result.Value) return block.Execute(this, true);
+                                else if (block.HasOtherwise()) return block.Execute(this, false);
                             }
+                            return result;
                         }
 
                     case "begin":
-                        break;
+                        {
+                            MException exception;
+                            MType block = new MBlock(this, out exception);
+                            return exception ?? block;
+                        }
 
                     case "end":
-                        break;
+                        return new MException(this, "Unexpected keyword 'end'");
 
                     case "otherwise":
-                        break;
+                        return new MException(this, "Unexpected keyword 'otherwise'");
 
                     case "for":
                         break;
@@ -551,14 +561,32 @@ namespace MathsLanguage
                         }
                         else
                         {
-                            MVariable variable = value as MVariable;
-                            if (variable != null)
+                            MBlock block = value as MBlock;
+                            if (function != null)
                             {
-                                function = variable.Value as MFunction;
-                                if (function != null)
+                                functionReturnValue = block.Execute(this);
+                                functionCalled = true;
+                            }
+                            else
+                            {
+                                MVariable variable = value as MVariable;
+                                if (variable != null)
                                 {
-                                    functionReturnValue = function.Call(this, argument);
-                                    functionCalled = true;
+                                    function = variable.Value as MFunction;
+                                    if (function != null)
+                                    {
+                                        functionReturnValue = function.Call(this, argument);
+                                        functionCalled = true;
+                                    }
+                                    else
+                                    {
+                                        block = variable.Value as MBlock;
+                                        if (block != null)
+                                        {
+                                            functionReturnValue = block.Execute(this);
+                                            functionCalled = true;
+                                        }
+                                    }
                                 }
                             }
                         }

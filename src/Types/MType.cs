@@ -18,6 +18,7 @@ namespace MathsLanguage.Types
         public const string M_NIL_TYPENAME = "nil";
         public const string M_ARGUMENTLIST_TYPENAME = "argumentList";
         public const string M_PARAMETERLIST_TYPENAME = "parameterList";
+        public const string M_BLOCK_TYPENAME = "block";
 
         public const char DIRECTIVE_CHARACTER = '#';
         public const char REFERENCE_CHARACTER = '@';

@@ -50,7 +50,7 @@ namespace MathsLanguage
         public const string EXIT_NAME = "exit";
         public static MType Exit(Interpreter interpreter, MArgumentList args)
         {
-            if (interpreter.Stack.Level == 1) interpreter.Kill();
+            if (interpreter.Stack.Level <= 1) interpreter.Kill();
             else interpreter.Stack.Pop();
             if (args.Count > 0) return args[0];
             return new MNil();
