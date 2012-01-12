@@ -179,7 +179,7 @@ namespace MathsLanguage
             }
         }
 
-        public static MType Compare(Interpreter interpreter, MType a, MType b, bool strict)
+        public static MType Equal(Interpreter interpreter, MType a, MType b, bool strict)
         {
             if (a is MVariable) a = ((MVariable)a).Value;
             if (b is MVariable) b = ((MVariable)b).Value;
@@ -216,6 +216,15 @@ namespace MathsLanguage
             }
 
             return null;
+        }
+
+        public static MType NotEqual(Interpreter interpreter, MType a, MType b)
+        {
+            MType value = Equal(interpreter, a, b, true);
+            MBoolean result = value as MBoolean;
+            if (result == null) return value;
+            result.Value = !result.Value;
+            return result;
         }
     }
 }

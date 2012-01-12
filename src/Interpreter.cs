@@ -143,12 +143,12 @@ namespace MathsLanguage
 
         private const string CONTROL_STATEMENT_LIST_STRING = "STRICT";
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
-            "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "\"", "{", "}", "[", "]", "(", ")",
+            "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
             "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "while", "for"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
-            "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=",  "\"", "{", "}", "[", "]", "(", ")",
+            "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=",  "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString()
         };
 
@@ -252,6 +252,11 @@ namespace MathsLanguage
                         else if (symbols[i] == "<")
                         {
                             symbols[i] = "<=";
+                            symbols.RemoveAt(i + 1);
+                        }
+                        else if (symbols[i] == "/")
+                        {
+                            symbols[i] = "/=";
                             symbols.RemoveAt(i + 1);
                         }
                     }
@@ -866,7 +871,7 @@ namespace MathsLanguage
                 MType b = MType.Parse(this, group[index + 1]);
                 if (b is MException) return b;
 
-                MType result = Operations.Compare(this, a, b, true);
+                MType result = Operations.Equal(this, a, b, true);
                 if (result == null) return new MException(this, "Comparison operation failed", "reason unknown");
                 if (result is MException) return result;
                 group[index - 1] = result;
@@ -882,7 +887,23 @@ namespace MathsLanguage
                 MType b = MType.Parse(this, group[index + 1]);
                 if (b is MException) return b;
 
-                MType result = Operations.Compare(this, a, b, false);
+                MType result = Operations.Equal(this, a, b, false);
+                if (result is MException) return result;
+                group[index - 1] = result;
+                group.RemoveRange(index, 2);
+            }
+
+            while ((index = group.IndexOf("/=")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '/='");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MType result = Operations.NotEqual(this, a, b);
+                if (result == null) return new MException(this, "Comparison operation failed", "reason unknown");
                 if (result is MException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
