@@ -47,7 +47,11 @@ namespace MathsLanguage.Types
                             statements.Add("otherwise");
                             statement = statement.Remove(otherwiseIndex, 9);
 
-                            if (blockLevel == 0) break;
+                            if (blockLevel == 0)
+                            {
+                                statements.Add(statement);
+                                break;
+                            }
                             else --blockLevel;
                         }
                     }
