@@ -33,7 +33,13 @@ namespace MathsLanguage.Types
 
             existingFunction = GetFunction(function.name, false);
             if (existingFunction == null) functions.Add(function.Name, function);
-            else existingFunction.CopyFrom(function);
+            else
+            {
+                existingFunction.hardCodedFunction = null;
+                existingFunction.customFunction = "";
+                existingFunction.block = null;
+                existingFunction.CopyFrom(function);
+            }
 
             return null;
         }
@@ -54,11 +60,16 @@ namespace MathsLanguage.Types
         private string customFunction;
         public string CustomFunction { get { return customFunction; } }
 
+        private MBlock block;
+        public MBlock Block { get { return block; } }
+
         public MFunction(string name, function function, string[] argNames, MType[] defaultArgs)
         {
             this.name = name;
             hardCodedFunction = function;
             customFunction = "";
+            block = null;
+
             if (argNames == null)
             {
                 this.argNames = null;
@@ -78,11 +89,39 @@ namespace MathsLanguage.Types
             }
         }
 
-        public MFunction(string name, string function, string[] argNames)
+        public MFunction(string name, string function, string[] argNames, MType[] defaultArgs)
         {
             this.name = name;
             hardCodedFunction = null;
             customFunction = function;
+            block = null;
+
+            if (argNames == null)
+            {
+                this.argNames = null;
+                this.defaultArgs = null;
+            }
+            else
+            {
+                this.argNames = new string[argNames.Length];
+                if (argNames.Length > 0) argNames.CopyTo(this.argNames, 0);
+
+                if (defaultArgs == null) this.defaultArgs = new MType[argNames.Length];
+                else
+                {
+                    this.defaultArgs = new MType[argNames.Length];
+                    if (defaultArgs.Length > 0) defaultArgs.CopyTo(this.defaultArgs, 0);
+                }
+            }
+        }
+
+        public MFunction(string name, MBlock block, string[] argNames, MType[] defaultArgs)
+        {
+            this.name = name;
+            this.block = block;
+            hardCodedFunction = null;
+            customFunction = "";
+
             if (argNames == null)
             {
                 this.argNames = null;
@@ -143,22 +182,34 @@ namespace MathsLanguage.Types
             }
 
 
-            MType returnValue;
-            if (hardCodedFunction == null)
+            MType returnValue = null;
+            if (hardCodedFunction != null) returnValue = hardCodedFunction.Invoke(interpreter, argList);
+            else if (customFunction != "")
             {
-                // loop through statements in block ////
                 returnValue = interpreter.Interpret(customFunction, true);
-                if (interpreter.Stack.Level < stackLevel) return returnValue;
-                //////
+                if ((interpreter.Stack.Level < stackLevel) || (returnValue is MException)) return returnValue;
             }
-            else returnValue = hardCodedFunction.Invoke(interpreter, argList);
+            else if (block != null)
+            {
+                while (!block.EndOfBlock)
+                {
+                    returnValue = block.ExecuteLine(interpreter);
+                    System.Console.WriteLine(returnValue.ToCSString());
+                    if ((interpreter.Stack.Level < stackLevel) || (returnValue is MException))
+                    {
+                        block.ResetLine();
+                        return returnValue;
+                    }
+                }
+                block.ResetLine();
+            }
 
             MVariable variable = returnValue as MVariable;
             if (variable != null) returnValue = variable.Value;
 
             interpreter.Stack.Pop();
 
-            return returnValue;
+            return returnValue ?? new MNil();
         }
 
         public void CopyFrom(MFunction otherFunction)
@@ -166,6 +217,8 @@ namespace MathsLanguage.Types
             name = otherFunction.name;
             hardCodedFunction = otherFunction.hardCodedFunction;
             customFunction = otherFunction.customFunction;
+            block = otherFunction.block;
+
             if (otherFunction.argNames == null)
             {
                 argNames = null;

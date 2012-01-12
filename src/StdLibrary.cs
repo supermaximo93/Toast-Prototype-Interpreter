@@ -57,16 +57,22 @@ namespace MathsLanguage
         public const string READ_NAME = "read";
         public static MType Read(Interpreter interpreter, MArgumentList args)
         {
-            return MType.Parse(interpreter, System.Console.ReadLine());
+            string str = System.Console.ReadLine();
+            MType value = MType.Parse(interpreter, str);
+            if (value is MException) value = MType.Parse(interpreter, '"' + str + '"');
+            return value;
         }
 
         public const string EXIT_NAME = "exit";
         public static MType Exit(Interpreter interpreter, MArgumentList args)
         {
+            MType returnValue = null;
+            if (args.Count > 0) returnValue = args[0];
+
             if (interpreter.Stack.Level <= 1) interpreter.Kill();
             else interpreter.Stack.Pop();
-            if (args.Count > 0) return args[0];
-            return new MNil();
+
+            return returnValue ?? new MNil();
         }
 
         static System.Random randomNumberGenerator;

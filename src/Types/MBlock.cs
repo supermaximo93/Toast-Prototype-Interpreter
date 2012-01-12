@@ -9,13 +9,13 @@ namespace MathsLanguage.Types
     {
         List<string> statements;
         int otherwiseLocation, currentLine;
-        bool isOtherwiseBlock;
+        bool otherwiseAllowed;
 
-        public MBlock(Interpreter interpreter, out MException exception, bool isOtherwiseBlock = false)
+        public MBlock(Interpreter interpreter, out MException exception, bool otherwiseAllowed)
         {
             statements = new List<string>();
             otherwiseLocation = -1;
-            this.isOtherwiseBlock = isOtherwiseBlock;
+            this.otherwiseAllowed = otherwiseAllowed;
             exception = null;
             currentLine = -1;
 
@@ -39,13 +39,13 @@ namespace MathsLanguage.Types
                 int otherwiseIndex;
                 if (((otherwiseIndex = statement.IndexOf("otherwise")) >= 0) && (blockLevel == 0)) // otherwise with when possible
                 {
-                    if ((otherwiseLocation < 0) && !isOtherwiseBlock)
+                    if ((otherwiseLocation < 0) && otherwiseAllowed)
                     {
                         otherwiseLocation = statements.Count;
                         if (otherwiseIndex + 9 < statement.Length - 1)
                         {
                             statements.Add("otherwise");
-                            statements.Add(statement.Remove(0, 9));
+                            statement = statement.Remove(0, 9);
 
                             if (blockLevel == 0) break;
                             else --blockLevel;
@@ -53,9 +53,12 @@ namespace MathsLanguage.Types
                     }
                     else
                     {
-                        exception = new MException(interpreter, "Unexpected keyword 'otherwise'", "otherwise already used");
-                        statements.Clear();
-                        break;
+                        if (otherwiseIndex == 0)
+                        {
+                            exception = new MException(interpreter, "Unexpected keyword 'otherwise'", "otherwise already used");
+                            statements.Clear();
+                            break;
+                        }
                     }
                 }
                 statements.Add(statement);
@@ -77,14 +80,9 @@ namespace MathsLanguage.Types
         {
             if (!beforeOtherwise && (otherwiseLocation < 0)) return new MException(interpreter, "No otherwise statement found");
 
-            MType returnValue = null;
             int start, end;
-            if (isOtherwiseBlock)
-            {
-                start = 0;
-                end = statements.Count - 1;
-            }
-            else
+
+            if (otherwiseAllowed)
             {
                 if (beforeOtherwise)
                 {
@@ -97,10 +95,16 @@ namespace MathsLanguage.Types
                     end = statements.Count - 1;
                 }
             }
+            else
+            {
+                start = 0;
+                end = statements.Count - 1;
+            }
 
             MBlock previousCurrentBlock = interpreter.CurrentBlock;
             interpreter.CurrentBlock = this;
 
+            MType returnValue = null;
             for (currentLine = start; currentLine <= end; ++currentLine)
             {
                 returnValue = interpreter.Interpret(statements[currentLine], true);
@@ -115,6 +119,23 @@ namespace MathsLanguage.Types
 
             return returnValue ?? new MNil();
         }
+
+        public MType ExecuteLine(Interpreter interpreter)
+        {
+            // Needs to be done this way so block doesn't return nil when called in function
+            if (currentLine < 0) currentLine = 0;
+            else if (currentLine >= statements.Count) return new MNil();
+            MType returnValue = interpreter.Interpret(statements[currentLine], true);
+            ++currentLine;
+            return returnValue;
+        }
+
+        public void ResetLine()
+        {
+            currentLine = -1;
+        }
+
+        public bool EndOfBlock { get { return currentLine >= statements.Count; } }
 
         public override string TypeName { get { return M_BLOCK_TYPENAME; } }
 

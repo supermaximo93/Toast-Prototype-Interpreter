@@ -187,6 +187,7 @@ namespace MathsLanguage
                 return new MException(this, "Halting interpreter execution");
             }
             if (command == "") return new MNil();
+            if (command.StartsWith("//")) return new MNil();
 
             List<string> strings = new List<string>();
             int index = -1;
@@ -439,11 +440,20 @@ namespace MathsLanguage
                             if (assignmentOperator == null) return exception;
                             else if (assignmentOperator != "=") return exception;
 
-                            if (group.Count == 4) return exception;
-                            Group funcBody = new Group(null);
-                            funcBody.AddRange(group.GetRange(4, group.Count - 4));
+                            MFunction function;
+                            if (group.Count == 4)
+                            {
+                                MBlock block = new MBlock(this, out exception, false);
+                                if (exception != null) return exception;
+                                function = new MFunction(variableName, block, paramList.ParameterNames, null);
+                            }
+                            else
+                            {
+                                Group funcBody = new Group(null);
+                                funcBody.AddRange(group.GetRange(4, group.Count - 4));
+                                function = new MFunction(variableName, funcBody.ToString(), paramList.ParameterNames, null);
+                            }
 
-                            MFunction function = new MFunction(variableName, funcBody.ToString(), paramList.ParameterNames);
                             exception = MFunction.AddFunction(this, function);
                             if (exception != null) return exception;
 
@@ -514,7 +524,7 @@ namespace MathsLanguage
                                 if (otherwiseIndex == group.Count - 1)
                                 {
                                     MException exception;
-                                    otherwiseBlock = new MBlock(this, out exception, true);
+                                    otherwiseBlock = new MBlock(this, out exception, false);
                                     if (exception != null) return exception;
                                 }
 
@@ -542,7 +552,7 @@ namespace MathsLanguage
 
                             {
                                 MException exception;
-                                MBlock block = new MBlock(this, out exception);
+                                MBlock block = new MBlock(this, out exception, true);
                                 if (exception != null) return exception;
                                 if (result.Value) return block.Execute(this, true);
                                 else if (block.HasOtherwise()) return block.Execute(this, false);
@@ -553,7 +563,7 @@ namespace MathsLanguage
                     case "begin":
                         {
                             MException exception;
-                            MType block = new MBlock(this, out exception);
+                            MType block = new MBlock(this, out exception, false);
                             return exception ?? block;
                         }
 
