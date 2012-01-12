@@ -145,7 +145,7 @@ namespace MathsLanguage
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
-            "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "for"
+            "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "while", "for"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=",  "\"", "{", "}", "[", "]", "(", ")",
@@ -168,6 +168,14 @@ namespace MathsLanguage
                 string returnStr = "( ";
                 for (int i = 0; i < Count; ++i) returnStr += this[i] + " ";
                 return returnStr + ")";
+            }
+
+            public override object Clone()
+            {
+                Group copy = new Group(null);
+                copy.parentGroup = parentGroup;
+                copy.AddRange(this);
+                return copy;
             }
         }
 
@@ -572,6 +580,57 @@ namespace MathsLanguage
 
                     case "otherwise":
                         return new MException(this, "Unexpected keyword 'otherwise'");
+
+                    case "while":
+                        {
+                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                                "when statement must be given a condition");
+
+                            int commaIndex = group.IndexOf(",");
+                            if (commaIndex < 0) return new MException(this, "when statment invalid",
+                                "comma required after condition");
+
+                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                                "when statement must be given a condition");
+
+                            Group conditionGroup = new Group(null);
+                            conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
+
+                            Group statementGroup = null;
+                            MBlock block = null;
+                            if (group.Count > commaIndex + 1)
+                            {
+                                statementGroup = new Group(null);
+                                statementGroup.AddRange(group.GetRange(commaIndex + 1, group.Count - (commaIndex + 1)));
+                            }
+                            else
+                            {
+                                MException exception;
+                                block = new MBlock(this, out exception, false);
+                                if (exception != null) return exception;
+                            }
+
+                            while (true)
+                            {
+                                MType value = ParseGroup((Group)conditionGroup.Clone());
+                                if (value is MException) return value;
+
+                                MBoolean result = value as MBoolean;
+                                if (result == null) return new MException(this, "Condition does not evaluate to a boolean value",
+                                    "yes or no");
+
+                                if (result.Value)
+                                {
+                                    MType returnValue;
+                                    if (statementGroup != null) returnValue = ParseGroup((Group)statementGroup.Clone());
+                                    else returnValue = block.Execute(this);
+                                    if (returnValue is MException) return returnValue;
+                                }
+                                else return new MNil();
+
+                                if (!alive) return new MNil();
+                            }
+                        }
 
                     case "for":
                         break;
