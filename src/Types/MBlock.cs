@@ -109,7 +109,7 @@ namespace MathsLanguage.Types
             for (currentLine = start; currentLine <= end; ++currentLine)
             {
                 returnValue = interpreter.Interpret(statements[currentLine], true);
-                if (returnValue is MException)
+                if ((returnValue is MException)  || (returnValue is MBreak))
                 {
                     interpreter.CurrentBlock = previousCurrentBlock;
                     return returnValue;

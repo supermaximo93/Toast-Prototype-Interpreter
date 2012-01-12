@@ -16,10 +16,12 @@ namespace MathsLanguage.Types
         public const string M_STRING_TYPENAME = "string";
         public const string M_VARIABLE_TYPENAME = "variable";
         public const string M_EXCEPTION_TYPENAME = "exception";
-        public const string M_NIL_TYPENAME = "nil";
         public const string M_ARGUMENTLIST_TYPENAME = "argumentList";
         public const string M_PARAMETERLIST_TYPENAME = "parameterList";
         public const string M_BLOCK_TYPENAME = "block";
+
+        public const string M_NIL_TYPENAME = "nil";
+        public const string M_BREAK_TYPENAME = "break";
 
         public const char DIRECTIVE_CHARACTER = '#';
         public const char REFERENCE_CHARACTER = '@';
@@ -42,6 +44,7 @@ namespace MathsLanguage.Types
 
                 if ((str == "yes") || (str == "no")) return new MBoolean(str);
                 if (str == "nil") return MNil.Instance;
+                if (str == "break") return MBreak.Instance;
 
                 {
                     long result;

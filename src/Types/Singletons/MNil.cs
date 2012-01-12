@@ -7,7 +7,7 @@ namespace MathsLanguage.Types.Singletons
 {
     class MNil : MType
     {
-        public static readonly MNil instance = new MNil();
+        private static readonly MNil instance = new MNil();
         public static MNil Instance { get { return instance; } }
 
         public override string TypeName { get { return M_NIL_TYPENAME; } }

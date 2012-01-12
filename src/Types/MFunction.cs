@@ -188,16 +188,34 @@ namespace MathsLanguage.Types
             else if (customFunction != "")
             {
                 returnValue = interpreter.Interpret(customFunction, true);
-                if ((interpreter.Stack.Level < stackLevel) || (returnValue is MException)) return returnValue;
+                if (interpreter.Stack.Level < stackLevel)
+                {
+                    MVariable variable = returnValue as MVariable;
+                    if (variable != null) returnValue = variable.Value;
+                    return returnValue;
+                }
+                else if ((returnValue is MException) || (returnValue is MBreak))
+                {
+                    interpreter.Stack.Pop();
+                    return returnValue;
+                }
             }
             else if (block != null)
             {
                 while (!block.EndOfBlock)
                 {
                     returnValue = block.ExecuteLine(interpreter);
-                    System.Console.WriteLine(returnValue.ToCSString());
-                    if ((interpreter.Stack.Level < stackLevel) || (returnValue is MException))
+
+                    if (interpreter.Stack.Level < stackLevel)
                     {
+                        MVariable variable = returnValue as MVariable;
+                        if (variable != null) returnValue = variable.Value;
+                        block.ResetLine();
+                        return returnValue;
+                    }
+                    else if ((returnValue is MException) || (returnValue is MBreak))
+                    {
+                        interpreter.Stack.Pop();
                         block.ResetLine();
                         return returnValue;
                     }
@@ -205,8 +223,10 @@ namespace MathsLanguage.Types
                 block.ResetLine();
             }
 
-            MVariable variable = returnValue as MVariable;
-            if (variable != null) returnValue = variable.Value;
+            {
+                MVariable variable = returnValue as MVariable;
+                if (variable != null) returnValue = variable.Value;
+            }
 
             interpreter.Stack.Pop();
 

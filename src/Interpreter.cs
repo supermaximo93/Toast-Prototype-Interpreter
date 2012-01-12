@@ -146,7 +146,7 @@ namespace MathsLanguage
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
-            "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "while", "for"
+            "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "while", "for", "break"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=",  "\"", "{", "}", "[", "]", "(", ")",
@@ -631,6 +631,7 @@ namespace MathsLanguage
                                     if (statementGroup != null) returnValue = ParseGroup((Group)statementGroup.Clone());
                                     else returnValue = block.Execute(this);
                                     if (returnValue is MException) return returnValue;
+                                    if (returnValue is MBreak) return MNil.Instance;
                                 }
                                 else return MNil.Instance;
 
