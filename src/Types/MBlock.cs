@@ -28,8 +28,7 @@ namespace MathsLanguage.Types
                 if (statement.IndexOf("begin") >= 0) ++blockLevel;
                 else if (statement.IndexOf("when") >= 0)
                 {
-                    int commaIndex = statement.IndexOf(",");
-                    if (commaIndex == statement.Length - 1) ++blockLevel;
+                    if (statement.EndsWith(",")) ++blockLevel;
                 }
                 else if (statement.IndexOf("end") >= 0)
                 {
@@ -46,7 +45,7 @@ namespace MathsLanguage.Types
                         if (otherwiseIndex + 9 < statement.Length - 1)
                         {
                             statements.Add("otherwise");
-                            statement = statement.Remove(0, 9);
+                            statement = statement.Remove(otherwiseIndex, 9);
 
                             if (blockLevel == 0) break;
                             else --blockLevel;

@@ -202,6 +202,9 @@ namespace MathsLanguage.Types
             }
             else if (block != null)
             {
+                MBlock previousCurrentBlock = interpreter.CurrentBlock;
+                interpreter.CurrentBlock = block;
+
                 while (!block.EndOfBlock)
                 {
                     returnValue = block.ExecuteLine(interpreter);
@@ -220,7 +223,9 @@ namespace MathsLanguage.Types
                         return returnValue;
                     }
                 }
+
                 block.ResetLine();
+                interpreter.CurrentBlock = previousCurrentBlock;
             }
 
             {
