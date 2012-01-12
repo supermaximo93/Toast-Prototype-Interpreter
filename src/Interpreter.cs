@@ -400,7 +400,10 @@ namespace MathsLanguage
                         }
 
                         if (group.Count == 1) return new MException(this, "Could not assign variable", "no variable name given");
+
                         string variableName = group[1] as string;
+                        MVariable existingVariable = null;
+
                         if (variableName == null)
                         {
                             MException exception = new MException(this, "Could not assign variable", "invalid variable name given");
@@ -411,7 +414,7 @@ namespace MathsLanguage
                             if (value == null) return exception;
 
                             MVariable variable = value as MVariable;
-                            if (variable != null) variableName = variable.Identifier;
+                            if (variable != null) existingVariable = variable;
                             else
                             {
                                 MFunction function = value as MFunction;
@@ -459,13 +462,15 @@ namespace MathsLanguage
                             {
                                 MBlock block = new MBlock(this, out exception, false);
                                 if (exception != null) return exception;
-                                function = new MFunction(variableName, block, paramList.ParameterNames, null);
+                                function = new MFunction(variableName ?? existingVariable.Identifier, block,
+                                    paramList.ParameterNames, null);
                             }
                             else
                             {
                                 Group funcBody = new Group(null);
                                 funcBody.AddRange(group.GetRange(4, group.Count - 4));
-                                function = new MFunction(variableName, funcBody.ToString(), paramList.ParameterNames, null);
+                                function = new MFunction(variableName ?? existingVariable.Identifier, funcBody.ToString(),
+                                    paramList.ParameterNames, null);
                             }
 
                             exception = MFunction.AddFunction(this, function);
@@ -488,7 +493,7 @@ namespace MathsLanguage
                             MVariable variable = value as MVariable;
                             if (variable != null) value = variable.Value;
 
-                            variable = stack.FindVariable(variableName);
+                            variable = existingVariable ?? stack.FindVariable(variableName);
                             if (value == variable) return new MException(this, "Illegal assignment attempted",
                                 "variables cannot reference themselves");
                             MVariable circularRefCheckVar = value as MVariable;
