@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MathsLanguage.Types.Singletons;
 
 namespace MathsLanguage.Types
 {
@@ -37,10 +38,10 @@ namespace MathsLanguage.Types
             if (obj is string)
             {
                 string str = ((string)obj).Trim();
-                if (str == "") return new MNil();
+                if (str == "") return MNil.Instance;
 
                 if ((str == "yes") || (str == "no")) return new MBoolean(str);
-                if (str == "nil") return new MNil();
+                if (str == "nil") return MNil.Instance;
 
                 {
                     long result;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MathsLanguage.Types;
+using MathsLanguage.Types.Singletons;
 
 namespace MathsLanguage
 {
@@ -17,7 +18,7 @@ namespace MathsLanguage
             functions = new Dictionary<string, MFunction>();
             functions.Add(PRINT_NAME, new MFunction(PRINT_NAME, Print, null, null));
             functions.Add(READ_NAME, new MFunction(READ_NAME, Read, new string[0], null));
-            functions.Add(EXIT_NAME, new MFunction(EXIT_NAME, Exit, new string[] { "returnValue" }, new MType[] { new MNil() }));
+            functions.Add(EXIT_NAME, new MFunction(EXIT_NAME, Exit, new string[] { "returnValue" }, new MType[] { MNil.Instance }));
             functions.Add(RANDOM_NAME, new MFunction(RANDOM_NAME, Random, new string[] { "maximum" }, null));
             functions.Add(LOAD_NAME, new MFunction(LOAD_NAME, Load, new string[] { "file" }, null));
 
@@ -37,7 +38,7 @@ namespace MathsLanguage
             MString fileName = args[0] as MString;
             if (fileName == null) return new MException(interpreter, "Name of file to load must be given as a string");
             interpreter.LoadFile(fileName.Value);
-            return new MNil();
+            return MNil.Instance;
         }
 
         public const string PRINT_NAME = "print";
@@ -51,7 +52,7 @@ namespace MathsLanguage
                 else str += arg.Value;
             }
             System.Console.WriteLine(str);
-            return new MNil();
+            return MNil.Instance;
         }
 
         public const string READ_NAME = "read";
@@ -72,7 +73,7 @@ namespace MathsLanguage
             if (interpreter.Stack.Level <= 1) interpreter.Kill();
             else interpreter.Stack.Pop();
 
-            return returnValue ?? new MNil();
+            return returnValue ?? MNil.Instance;
         }
 
         static System.Random randomNumberGenerator;

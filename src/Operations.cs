@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MathsLanguage.Types;
+using MathsLanguage.Types.Singletons;
 
 namespace MathsLanguage
 {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MathsLanguage.Types.Singletons;
 
 namespace MathsLanguage.Types
 {
@@ -209,7 +210,7 @@ namespace MathsLanguage.Types
 
             interpreter.Stack.Pop();
 
-            return returnValue ?? new MNil();
+            return returnValue ?? MNil.Instance;
         }
 
         public void CopyFrom(MFunction otherFunction)

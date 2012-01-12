@@ -4,6 +4,7 @@ using System.Collections;
 using System.Linq;
 using System.Text;
 using MathsLanguage.Types;
+using MathsLanguage.Types.Singletons;
 
 namespace MathsLanguage
 {
@@ -190,12 +191,12 @@ namespace MathsLanguage
                     file.Close();
                     file = null;
                     System.Console.WriteLine();
-                    return new MNil();
+                    return MNil.Instance;
                 }
                 return new MException(this, "Halting interpreter execution");
             }
-            if (command == "") return new MNil();
-            if (command.StartsWith("//")) return new MNil();
+            if (command == "") return MNil.Instance;
+            if (command.StartsWith("//")) return MNil.Instance;
 
             List<string> strings = new List<string>();
             int index = -1;
@@ -205,7 +206,7 @@ namespace MathsLanguage
                 if (index2 < 0)
                 {
                     System.Console.WriteLine(new MException(this, "String not closed", "another \" required").ToCSString());
-                    return new MNil();
+                    return MNil.Instance;
                 }
 
                 string str = command.Substring(index + 1, (index2 - index) - 1);
@@ -310,7 +311,7 @@ namespace MathsLanguage
             }
 
             if ((currentBlock == null) && !RunningFromFile) System.Console.WriteLine();
-            return new MNil();
+            return MNil.Instance;
         }
 
         public MType ParseGroup(Group group)
@@ -348,7 +349,7 @@ namespace MathsLanguage
                                         if (strict) System.Console.WriteLine("Interpreter running in strict mode");
                                         else System.Console.WriteLine("Interpreter not running in strict mode");
 
-                                        return new MNil();
+                                        return MNil.Instance;
                                     }
                                     else return new MException(this, "Directive 'STRICT' could not be used",
                                         "invalid parameter (none given); use yes or no");
@@ -631,9 +632,9 @@ namespace MathsLanguage
                                     else returnValue = block.Execute(this);
                                     if (returnValue is MException) return returnValue;
                                 }
-                                else return new MNil();
+                                else return MNil.Instance;
 
-                                if (!alive) return new MNil();
+                                if (!alive) return MNil.Instance;
                             }
                         }
 
@@ -931,7 +932,7 @@ namespace MathsLanguage
                 group.RemoveRange(index, 2);
             }
 
-            if (group.Count == 0) return new MNil();
+            if (group.Count == 0) return MNil.Instance;
             else if (group.Count == 1) return MType.Parse(this, group[0]);
             else return new MException(this, "Expression could not be evaluated completely");
         }

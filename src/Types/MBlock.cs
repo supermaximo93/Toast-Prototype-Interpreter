@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MathsLanguage.Types.Singletons;
 
 namespace MathsLanguage.Types
 {
@@ -117,14 +118,14 @@ namespace MathsLanguage.Types
 
             interpreter.CurrentBlock = previousCurrentBlock;
 
-            return returnValue ?? new MNil();
+            return returnValue ?? MNil.Instance;
         }
 
         public MType ExecuteLine(Interpreter interpreter)
         {
             // Needs to be done this way so block doesn't return nil when called in function
             if (currentLine < 0) currentLine = 0;
-            else if (currentLine >= statements.Count) return new MNil();
+            else if (currentLine >= statements.Count) return MNil.Instance;
             MType returnValue = interpreter.Interpret(statements[currentLine], true);
             ++currentLine;
             return returnValue;
