@@ -146,7 +146,7 @@ namespace MathsLanguage
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
-            "let", "yes", "no", "nil", "when", "otherwise", "begin", "end", "while", "for", "break"
+            "let", "yes", "no", "nil", "if", "otherwise", "begin", "end", "while", "for", "break"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=",  "\"", "{", "}", "[", "]", "(", ")",
@@ -180,23 +180,10 @@ namespace MathsLanguage
             }
         }
 
-        public MType Interpret(string command, bool isFunctionCall = false)
+        public Group SplitIntoSymbols(string command, out MException exception)
         {
+            exception = null;
             command = command.Trim();
-
-            if (command == "quit")
-            {
-                if (RunningFromFile && runningFromCommandLine)
-                {
-                    file.Close();
-                    file = null;
-                    System.Console.WriteLine();
-                    return MNil.Instance;
-                }
-                return new MException(this, "Halting interpreter execution");
-            }
-            if (command == "") return MNil.Instance;
-            if (command.StartsWith("//")) return MNil.Instance;
 
             List<string> strings = new List<string>();
             int index = -1;
@@ -205,15 +192,15 @@ namespace MathsLanguage
                 int index2 = command.IndexOf(MType.STRING_CHARACTER, index + 1);
                 if (index2 < 0)
                 {
-                    System.Console.WriteLine(new MException(this, "String not closed", "another \" required").ToCSString());
-                    return MNil.Instance;
+                    exception = new MException(this, "String not closed", "another \" required");
+                    return null;
                 }
 
                 string str = command.Substring(index + 1, (index2 - index) - 1);
                 command = command.Remove(index + 1, index2 - index);
                 strings.Add(str);
             }
-            
+
             foreach (string s in SYMBOLS_TO_SPLIT_BY)
             {
                 string newS = " " + s + " ";
@@ -297,12 +284,37 @@ namespace MathsLanguage
             if (groupDepth > 0) new MException(this, "Too few closing brackets", groupDepth.ToString() + " required");
             else if (groupDepth < 0) new MException(this, "Too many closing brackets", "remove " + (-groupDepth).ToString());
 
-            MType value = ParseGroup(superGroup);
+            return superGroup;
+        }
+
+        public MType Interpret(string command, bool isFunctionCall = false)
+        {
+            command = command.Trim();
+
+            if (command == "quit")
+            {
+                if (RunningFromFile && runningFromCommandLine)
+                {
+                    file.Close();
+                    file = null;
+                    System.Console.WriteLine();
+                    return MNil.Instance;
+                }
+                return new MException(this, "Halting interpreter execution");
+            }
+            if (command == "") return MNil.Instance;
+            if (command.StartsWith("//")) return MNil.Instance;
+
+            MException exception;
+            Group group = SplitIntoSymbols(command, out exception);
+            if (exception != null) return exception;
+
+            MType value = ParseGroup(group);
             if (value != null)
             {
                 if (isFunctionCall) return value;
 
-                MException exception = value as MException;
+                exception = value as MException;
                 if (exception == null)
                 {
                     if (!RunningFromFile) System.Console.WriteLine("-> {0}", value.ToCSString());
@@ -513,17 +525,17 @@ namespace MathsLanguage
                             return variable;
                         }
 
-                    case "when":
+                    case "if":
                         {
                             if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
-                                "when statement must be given a condition");
+                                "if statement must be given a condition");
 
                             int commaIndex = group.IndexOf(",");
-                            if (commaIndex < 0) return new MException(this, "when statment invalid",
+                            if (commaIndex < 0) return new MException(this, "if statment invalid",
                                 "comma required after condition");
 
                             if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
-                                "when statement must be given a condition");
+                                "if statement must be given a condition");
 
                             Group conditionGroup = new Group(null);
                             conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
@@ -595,14 +607,14 @@ namespace MathsLanguage
                     case "while":
                         {
                             if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
-                                "when statement must be given a condition");
+                                "if statement must be given a condition");
 
                             int commaIndex = group.IndexOf(",");
-                            if (commaIndex < 0) return new MException(this, "when statment invalid",
+                            if (commaIndex < 0) return new MException(this, "if statment invalid",
                                 "comma required after condition");
 
                             if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
-                                "when statement must be given a condition");
+                                "if statement must be given a condition");
 
                             Group conditionGroup = new Group(null);
                             conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));

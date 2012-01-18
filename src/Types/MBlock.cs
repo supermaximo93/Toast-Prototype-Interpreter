@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,46 +26,85 @@ namespace MathsLanguage.Types
             {
                 string statement = interpreter.GetInput().Trim();
 
-                if (statement.IndexOf("begin") >= 0) ++blockLevel;
-                else if (statement.IndexOf("when") >= 0)
+                Interpreter.Group symbolGroup = interpreter.SplitIntoSymbols(statement, out exception);
+                if (exception != null)
                 {
-                    if (statement.EndsWith(",")) ++blockLevel;
+                    statements.Clear();
+                    break;
                 }
-                else if (statement.IndexOf("end") >= 0)
+
+                string keywordName = "";
+                var keywordQuery =
+                    from object item in symbolGroup
+                    where (item is string) && ((string)item == keywordName)
+                    select item;
+
+                keywordName = "begin";
+                int beginCount = keywordQuery.Count();
+                if (beginCount > 1)
+                {
+                    exception = new MException(interpreter, "Having more than one begin on a line is forbidden");
+                    break;
+                }
+                else if (beginCount == 1) ++blockLevel;
+
+                keywordName = "end";
+                int endCount = keywordQuery.Count();
+                if (endCount > 1)
+                {
+                    exception = new MException(interpreter, "Having more than one end on a line is forbidden");
+                    break;
+                }
+                else if (endCount == 1)
                 {
                     if (blockLevel == 0) break;
                     else --blockLevel;
                 }
 
-                int otherwiseIndex;
-                if (((otherwiseIndex = statement.IndexOf("otherwise")) >= 0) && (blockLevel == 0)) // otherwise with when possible
+                if (symbolGroup.IndexOf("if") >= 0)
                 {
-                    if ((otherwiseLocation < 0) && otherwiseAllowed)
+                    string commaStr = symbolGroup[symbolGroup.Count - 1] as string;
+                    if (commaStr != null)
                     {
-                        otherwiseLocation = statements.Count;
-                        if (otherwiseIndex + 9 < statement.Length - 1)
-                        {
-                            statements.Add("otherwise");
-                            statement = statement.Remove(otherwiseIndex, 9);
-
-                            if (blockLevel == 0)
-                            {
-                                statements.Add(statement);
-                                break;
-                            }
-                            else --blockLevel;
-                        }
-                    }
-                    else
-                    {
-                        if (otherwiseIndex == 0)
-                        {
-                            exception = new MException(interpreter, "Unexpected keyword 'otherwise'", "otherwise already used");
-                            statements.Clear();
-                            break;
-                        }
+                        if (commaStr == ",") ++blockLevel;
                     }
                 }
+
+                bool breakNow = false; // For a double break
+                int otherwiseIndex = -1;
+                while ((otherwiseIndex = symbolGroup.IndexOf("otherwise", otherwiseIndex + 1)) >= 0)
+                {
+                    if (otherwiseIndex == 0)
+                    {
+                        if (blockLevel == 0)
+                        {
+                            if ((otherwiseLocation < 0) && otherwiseAllowed)
+                            {
+                                otherwiseLocation = statements.Count;
+                                if (otherwiseIndex < symbolGroup.Count - 1)
+                                {
+                                    statements.Add("otherwise");
+                                    statements.Add(statement.Substring(10, statement.Length - 10));
+                                    breakNow = true;
+                                }
+                            }
+                            else
+                            {
+                                exception = new MException(interpreter, "Unexpected keyword 'otherwise'", "otherwise already used");
+                                statements.Clear();
+                                breakNow = true;
+                                break;
+                            }
+                        }
+                        else if (otherwiseIndex < symbolGroup.Count - 1) --blockLevel;
+                    }
+                    else if (symbolGroup.LastIndexOf("if", otherwiseIndex) >= 0)
+                    {
+                        if (otherwiseIndex == symbolGroup.Count - 1) ++blockLevel;
+                    }
+                }
+                if (breakNow) break;
+                
                 statements.Add(statement);
             }
         }
