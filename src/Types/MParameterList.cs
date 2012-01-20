@@ -37,13 +37,13 @@ namespace MathsLanguage.Types
 
         public override string ToCSString()
         {
-            string returnString = "{ ";
+            string returnString = "";
             for (int i = 0; i < parameters.Count; ++i)
             {
                 returnString += parameters[i];
                 if (i < parameters.Count - 1) returnString += ", ";
             }
-            return returnString + " }";
+            return returnString;
         }
     }
 }

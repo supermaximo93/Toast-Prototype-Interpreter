@@ -178,6 +178,34 @@ namespace MathsLanguage
 
                 return null;
             }
+
+            public static MType Inequality(Interpreter interpreter, MType a, MType b, string inequality)
+            {
+                MNumber numberA, numberB;
+                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                if (exception != null) return exception;
+                exception = AssignNumberValue(interpreter, out numberB, b);
+                if (exception != null) return exception;
+
+                bool result = false;
+                switch (inequality)
+                {
+                    case ">":
+                        result = numberA.MRealValue > numberB.MRealValue;
+                        break;
+                    case ">=":
+                        result = numberA.MRealValue >= numberB.MRealValue;
+                        break;
+                    case "<":
+                        result = numberA.MRealValue < numberB.MRealValue;
+                        break;
+                    case "<=":
+                        result = numberA.MRealValue <= numberB.MRealValue;
+                        break;
+                }
+
+                return new MBoolean(result);
+            }
         }
 
         public static MType Equal(Interpreter interpreter, MType a, MType b, bool strict)

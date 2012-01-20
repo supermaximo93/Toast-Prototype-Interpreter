@@ -41,13 +41,13 @@ namespace MathsLanguage.Types
 
         public override string ToCSString()
         {
-            string returnString = "{ ";
+            string returnString = "";
             for (int i = 0; i < arguments.Count; ++i)
             {
                 returnString += arguments[i].ToCSString();
                 if (i < arguments.Count - 1) returnString += ", ";
             }
-            return returnString + " }";
+            return returnString;
         }
     }
 }

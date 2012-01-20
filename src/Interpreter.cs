@@ -928,6 +928,70 @@ namespace MathsLanguage
                 group.RemoveRange(index, 2);
             }
 
+            while ((index = group.IndexOf("<")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MType result = Operations.Math.Inequality(this, a, b, "<");
+                if (result == null) return new MException(this, "Less than comparison failed", "reason unknown");
+                if (result is MException) return result;
+                group[index - 1] = result;
+                group.RemoveRange(index, 2);
+            }
+
+            while ((index = group.IndexOf(">")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MType result = Operations.Math.Inequality(this, a, b, ">");
+                if (result == null) return new MException(this, "Greater than comparison failed", "reason unknown");
+                if (result is MException) return result;
+                group[index - 1] = result;
+                group.RemoveRange(index, 2);
+            }
+
+            while ((index = group.IndexOf("<=")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MType result = Operations.Math.Inequality(this, a, b, "<=");
+                if (result == null) return new MException(this, "Less than or equal comparison failed", "reason unknown");
+                if (result is MException) return result;
+                group[index - 1] = result;
+                group.RemoveRange(index, 2);
+            }
+
+            while ((index = group.IndexOf(">=")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MType result = Operations.Math.Inequality(this, a, b, ">=");
+                if (result == null) return new MException(this, "Greater than or equal comparison failed", "reason unknown");
+                if (result is MException) return result;
+                group[index - 1] = result;
+                group.RemoveRange(index, 2);
+            }
+
             while ((index = group.IndexOf(",")) >= 0)
             {
                 if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term ','");
