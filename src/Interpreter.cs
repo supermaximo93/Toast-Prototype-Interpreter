@@ -146,7 +146,7 @@ namespace MathsLanguage
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
-            "let", "yes", "no", "nil", "if", "otherwise", "begin", "end", "while", "for", "break"
+            "let", "yes", "no", "nil", "if", "otherwise", "begin", "end", "while", "for", "break", "or", "and"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=",  "\"", "{", "}", "[", "]", "(", ")",
@@ -947,6 +947,42 @@ namespace MathsLanguage
                 else argList.Add(b);
 
                 group[index - 1] = argList;
+                group.RemoveRange(index, 2);
+            }
+
+            while ((index = group.IndexOf("and")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term ','");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MBoolean aBool = a as MBoolean;
+                if (aBool == null) return new MException(this, "Left hand side of expression must be a boolean value", "yes or no");
+                MBoolean bBool = b as MBoolean;
+                if (bBool == null) return new MException(this, "Right hand side of expression must be a boolean value", "yes or no");
+
+                group[index - 1] = new MBoolean(aBool.Value && bBool.Value);
+                group.RemoveRange(index, 2);
+            }
+
+            while ((index = group.IndexOf("or")) >= 0)
+            {
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term ','");
+
+                MType a = MType.Parse(this, group[index - 1]);
+                if (a is MException) return a;
+                MType b = MType.Parse(this, group[index + 1]);
+                if (b is MException) return b;
+
+                MBoolean aBool = a as MBoolean;
+                if (aBool == null) return new MException(this, "Left hand side of expression must be a boolean value", "yes or no");
+                MBoolean bBool = b as MBoolean;
+                if (bBool == null) return new MException(this, "Right hand side of expression must be a boolean value", "yes or no");
+
+                group[index - 1] = new MBoolean(aBool.Value || bBool.Value);
                 group.RemoveRange(index, 2);
             }
 

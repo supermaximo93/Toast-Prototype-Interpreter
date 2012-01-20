@@ -70,6 +70,15 @@ namespace MathsLanguage.Types
                     }
                 }
 
+                if (symbolGroup.IndexOf("while") >= 0)
+                {
+                    string commaStr = symbolGroup[symbolGroup.Count - 1] as string;
+                    if (commaStr != null)
+                    {
+                        if (commaStr == ",") ++blockLevel;
+                    }
+                }
+
                 bool breakNow = false; // For a double break
                 int otherwiseIndex = -1;
                 while ((otherwiseIndex = symbolGroup.IndexOf("otherwise", otherwiseIndex + 1)) >= 0)
