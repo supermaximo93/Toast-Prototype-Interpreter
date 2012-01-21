@@ -70,9 +70,38 @@ namespace MathsLanguage
                     switch (numberA.TypeName)
                     {
                         case MType.M_INTEGER_TYPENAME:
-                            return new MInteger(numberA.MIntegerValue + numberB.MIntegerValue);
+                            {
+                                MFraction fraction = numberB as MFraction;
+                                if (fraction != null)
+                                {
+                                    fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                                    long numerator, denominator;
+                                    Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
+                                    fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs + rhs, false);
+                                    return fraction;
+                                }
+                                return new MInteger(numberA.MIntegerValue + numberB.MIntegerValue);
+                            }
+
                         case MType.M_REAL_TYPENAME:
                             return new MReal(numberA.MRealValue + numberB.MRealValue);
+
+                        case MType.M_FRACTION_TYPENAME:
+                            {
+                                MFraction fraction = numberA as MFraction;
+                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                                long numerator, denominator;
+                                MFraction otherFraction = numberB as MFraction;
+                                if (otherFraction == null)
+                                    Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator, out denominator);
+                                else
+                                {
+                                    numerator = otherFraction.Numerator;
+                                    denominator = otherFraction.Denominator;
+                                }
+                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs + rhs, true);
+                                return fraction;
+                            }
                     }
                 }
 
@@ -90,9 +119,38 @@ namespace MathsLanguage
                 switch (numberA.TypeName)
                 {
                     case MType.M_INTEGER_TYPENAME:
-                        return new MInteger(numberA.MIntegerValue - numberB.MIntegerValue);
+                        {
+                            MFraction fraction = numberB as MFraction;
+                            if (fraction != null)
+                            {
+                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                                long numerator, denominator;
+                                Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
+                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs - rhs, false);
+                                return fraction;
+                            }
+                            return new MInteger(numberA.MIntegerValue - numberB.MIntegerValue);
+                        }
+
                     case MType.M_REAL_TYPENAME:
                         return new MReal(numberA.MRealValue - numberB.MRealValue);
+
+                    case MType.M_FRACTION_TYPENAME:
+                        {
+                            MFraction fraction = numberA as MFraction;
+                            fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                            long numerator, denominator;
+                            MFraction otherFraction = numberB as MFraction;
+                            if (otherFraction == null)
+                                Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator, out denominator);
+                            else
+                            {
+                                numerator = otherFraction.Numerator;
+                                denominator = otherFraction.Denominator;
+                            }
+                            fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs - rhs, true);
+                            return fraction;
+                        }
                 }
 
                 return null;
@@ -109,9 +167,38 @@ namespace MathsLanguage
                 switch (numberA.TypeName)
                 {
                     case MType.M_INTEGER_TYPENAME:
-                        return new MInteger(numberA.MIntegerValue * numberB.MIntegerValue);
+                        {
+                            MFraction fraction = numberB as MFraction;
+                            if (fraction != null)
+                            {
+                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                                long numerator, denominator;
+                                Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
+                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs * rhs, false);
+                                return fraction;
+                            }
+                            return new MInteger(numberA.MIntegerValue * numberB.MIntegerValue);
+                        }
+
                     case MType.M_REAL_TYPENAME:
                         return new MReal(numberA.MRealValue * numberB.MRealValue);
+
+                    case MType.M_FRACTION_TYPENAME:
+                        {
+                            MFraction fraction = numberA as MFraction;
+                            fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                            long numerator, denominator;
+                            MFraction otherFraction = numberB as MFraction;
+                            if (otherFraction == null)
+                                Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator, out denominator);
+                            else
+                            {
+                                numerator = otherFraction.Numerator;
+                                denominator = otherFraction.Denominator;
+                            }
+                            fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs * rhs, true);
+                            return fraction;
+                        }
                 }
 
                 return null;
@@ -128,19 +215,43 @@ namespace MathsLanguage
                 switch (numberA.TypeName)
                 {
                     case MType.M_INTEGER_TYPENAME:
-                        return new MInteger(numberA.MIntegerValue / numberB.MIntegerValue);
+                        {
+                            MFraction fraction = numberB as MFraction;
+                            if (fraction != null)
+                            {
+                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                                long numerator, denominator;
+                                Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
+                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs / rhs, false);
+                                return fraction;
+                            }
+                            if (numberB.TypeName == MType.M_INTEGER_TYPENAME)
+                                return new MFraction(numberA.MIntegerValue, numberB.MIntegerValue);
+                            return new MInteger(numberA.MIntegerValue / numberB.MIntegerValue);
+                        }
+
                     case MType.M_REAL_TYPENAME:
                         return new MReal(numberA.MRealValue / numberB.MRealValue);
+
+                    case MType.M_FRACTION_TYPENAME:
+                        {
+                            MFraction fraction = numberA as MFraction;
+                            fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                            long numerator, denominator;
+                            MFraction otherFraction = numberB as MFraction;
+                            if (otherFraction == null)
+                                Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator, out denominator);
+                            else
+                            {
+                                numerator = otherFraction.Numerator;
+                                denominator = otherFraction.Denominator;
+                            }
+                            fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs / rhs, true);
+                            return fraction;
+                        }
                 }
 
                 return null;
-            }
-
-            private static long Pow(long num, long power)
-            {
-                long returnValue = num;
-                for (long i = 1; i < power; ++i) returnValue *= num;
-                return returnValue;
             }
 
             public static MType Pow(Interpreter interpreter, MType a, MType b)
@@ -154,9 +265,14 @@ namespace MathsLanguage
                 switch (numberA.TypeName)
                 {
                     case MType.M_INTEGER_TYPENAME:
-                        return new MInteger(Pow(numberA.MIntegerValue, numberB.MIntegerValue));
+                        return new MInteger((long)System.Math.Round(System.Math.Pow(numberA.MRealValue, numberB.MRealValue)));
                     case MType.M_REAL_TYPENAME:
                         return new MReal(System.Math.Pow(numberA.MRealValue, numberB.MRealValue));
+                    case MType.M_FRACTION_TYPENAME:
+                        MFraction fraction = numberA as MFraction;
+                        long numerator = (long)System.Math.Round(System.Math.Pow(fraction.Numerator, numberB.MRealValue));
+                        long denominator = (long)System.Math.Round(System.Math.Pow(fraction.Denominator, numberB.MRealValue));
+                        return new MFraction(numerator, denominator);
                 }
 
                 return null;
@@ -174,6 +290,10 @@ namespace MathsLanguage
                         return new MInteger(System.Math.Abs(number.MIntegerValue));
                     case MType.M_REAL_TYPENAME:
                         return new MReal(System.Math.Abs(number.MRealValue));
+                    case MType.M_FRACTION_TYPENAME:
+                        MFraction fraction = number as MFraction;
+                        return new MFraction(System.Math.Abs(fraction.Numerator), fraction.Denominator);
+                        // No need to abs denominator as MFraction denominators are automatically kept positive
                 }
 
                 return null;
@@ -254,6 +374,55 @@ namespace MathsLanguage
             if (result == null) return value;
             result.Value = !result.Value;
             return result;
+        }
+
+        public class Misc
+        {
+            public static void DoubleToFraction(double value, out long numerator, out long denominator)
+            // Algorithm taken from http://homepage.smc.edu/kennedy_john/DEC2FRAC.PDF by John Kennedy
+            {
+                const double precision = 0.000005;
+
+                double sign, z, previousDenominator, scratchValue;
+
+                if (value < 0.0) sign = -1.0;
+                else sign = 1.0;
+                value = System.Math.Abs(value);
+
+                if (value == (long)value)
+                {
+                    numerator = (long)(value * sign);
+                    denominator = 1;
+                    return;
+                }
+
+                if (value < 1.0e-18)
+                {
+                    numerator = (long)sign;
+                    denominator = 999999999999999999;
+                    return;
+                }
+
+                if (value > 1.0e+19)
+                {
+                    numerator = (long)(999999999999999999 * sign);
+                    denominator = 1;
+                    return;
+                }
+
+                z = value;
+                previousDenominator = 0.0;
+                denominator = 1;
+
+                do
+                {
+                    z = 1.0 / (z - (long)z);
+                    scratchValue = denominator;
+                    denominator = (long)((denominator * (long)z) + previousDenominator);
+                    previousDenominator = scratchValue;
+                    numerator = (long)((value * (double)denominator) + 0.5);
+                } while (!((System.Math.Abs(value - ((double)numerator / (double)denominator)) < precision) || (z == (long)z)));
+            }
         }
     }
 }

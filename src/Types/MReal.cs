@@ -38,7 +38,14 @@ namespace MathsLanguage.Types
 
         public override MReal ToMReal()
         {
-            return this;
+            return new MReal(value);
+        }
+
+        public override MFraction ToMFraction()
+        {
+            long numerator, denominator;
+            Operations.Misc.DoubleToFraction(value, out numerator, out denominator);
+            return new MFraction(numerator, denominator);
         }
 
         public override long MIntegerValue { get { return (long)Math.Round(value); } }

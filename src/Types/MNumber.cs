@@ -9,6 +9,7 @@ namespace MathsLanguage.Types
     {
         public abstract MInteger ToMInteger();
         public abstract MReal ToMReal();
+        public abstract MFraction ToMFraction();
 
         public abstract long MIntegerValue { get; }
         public abstract double MRealValue { get; }

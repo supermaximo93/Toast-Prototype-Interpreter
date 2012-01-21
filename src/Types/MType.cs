@@ -12,6 +12,8 @@ namespace MathsLanguage.Types
 
         public const string M_INTEGER_TYPENAME = "integer";
         public const string M_REAL_TYPENAME = "real";
+        public const string M_FRACTION_TYPENAME = "fraction";
+
         public const string M_BOOLEAN_TYPENAME = "boolean";
         public const string M_STRING_TYPENAME = "string";
         public const string M_VARIABLE_TYPENAME = "variable";
@@ -22,6 +24,7 @@ namespace MathsLanguage.Types
 
         public const string M_NIL_TYPENAME = "nil";
         public const string M_BREAK_TYPENAME = "break";
+        public const string M_INFINITY_TYPENAME = "infinity";
 
         public const char DIRECTIVE_CHARACTER = '#';
         public const char REFERENCE_CHARACTER = '@';

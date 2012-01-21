@@ -33,12 +33,19 @@ namespace MathsLanguage.Types
 
         public override MInteger ToMInteger()
         {
-            return this;
+            return new MInteger(value);
         }
 
         public override MReal ToMReal()
         {
             return new MReal((double)value);
+        }
+
+        public override MFraction ToMFraction()
+        {
+            long numerator, denominator;
+            Operations.Misc.DoubleToFraction((double)value, out numerator, out denominator);
+            return new MFraction(numerator, denominator);
         }
 
         public override long MIntegerValue { get { return value; } }
