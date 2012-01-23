@@ -23,7 +23,6 @@ namespace MathsLanguage.Types
             get { return denominator; }
             set {
                 denominator = value;
-                MakeDenominatorPositive();
                 Simplify();
             }
         }
@@ -38,21 +37,17 @@ namespace MathsLanguage.Types
         {
             this.numerator = numerator;
             this.denominator = denominator;
-            MakeDenominatorPositive();
             Simplify();
-        }
-
-        private void MakeDenominatorPositive()
-        {
-            if (denominator < 0)
-            {
-                numerator = -numerator;
-                denominator = -denominator;
-            }
         }
 
         private void Simplify()
         {
+            if (denominator < 0) // Make denominator positive by making numerator negative instead or cancelling negatives
+            {
+                numerator = -numerator;
+                denominator = -denominator;
+            }
+
             // Use the Euclidean algorithm to find greatest common factor and divide fraction by it
             long a = System.Math.Abs(numerator), b = denominator;
             while ((a > 0) && (b > 0))
@@ -96,32 +91,39 @@ namespace MathsLanguage.Types
             return new MFraction(-numerator, denominator);
         }
 
-        public delegate long Operation(long a, long b);
-        public void DoOperation(long otherNumerator, long otherDenominator, Operation operation, bool isLhs)
+        public void Add(long otherNumerator, long otherDenominator)
         {
-            if (otherDenominator == denominator)
-                numerator = isLhs ? operation(numerator, otherNumerator) : operation(otherNumerator, numerator);
-            else if (otherDenominator % denominator == 0)
-            {
-                long multiplier = otherDenominator / denominator;
-                numerator = isLhs ?
-                    operation(numerator * multiplier, otherNumerator) : operation(otherNumerator, numerator * multiplier);
-                denominator = otherDenominator;
-            }
-            else if (denominator % otherDenominator == 0)
-            {
-                long multiplier = denominator / otherDenominator;
-                numerator = isLhs ?
-                    operation(numerator, otherNumerator * multiplier) : operation(otherNumerator * multiplier, numerator);
-            }
+            if (otherDenominator == denominator) numerator += otherNumerator;
             else
             {
-                numerator = isLhs ? operation(numerator * otherDenominator, otherNumerator * denominator) :
-                    operation(otherNumerator * denominator, numerator * otherDenominator);
+                numerator = (numerator * otherDenominator) + (otherNumerator * denominator);
                 denominator *= otherDenominator;
             }
+            Simplify();
+        }
 
-            MakeDenominatorPositive();
+        public void Subtract(long otherNumerator, long otherDenominator)
+        {
+            if (otherDenominator == denominator) numerator -= otherNumerator;
+            else
+            {
+                numerator = (numerator * otherDenominator) + (otherNumerator * denominator);
+                denominator *= otherDenominator;
+            }
+            Simplify();
+        }
+
+        public void Multiply(long otherNumerator, long otherDenominator)
+        {
+            numerator *= otherNumerator;
+            denominator *= otherDenominator;
+            Simplify();
+        }
+
+        public void Divide(long otherNumerator, long otherDenominator)
+        {
+            numerator *= otherDenominator;
+            denominator *= otherNumerator;
             Simplify();
         }
     }

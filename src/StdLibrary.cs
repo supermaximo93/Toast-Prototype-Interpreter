@@ -19,7 +19,7 @@ namespace MathsLanguage
             functions.Add(PRINT_NAME, new MFunction(PRINT_NAME, Print, null, null));
             functions.Add(READ_NAME, new MFunction(READ_NAME, Read, new string[0], null));
             functions.Add(READSTRING_NAME, new MFunction(READSTRING_NAME, ReadString, new string[0], null));
-            functions.Add(EXIT_NAME, new MFunction(EXIT_NAME, Exit, new string[] { "returnValue" }, new MType[] { MNil.Instance }));
+            functions.Add(EXIT_NAME, new MFunction(EXIT_NAME, Exit, new string[] { "return_value" }, new MType[] { MNil.Instance }));
             functions.Add(RANDOM_NAME, new MFunction(RANDOM_NAME, Random, new string[] { "maximum" }, null));
             functions.Add(LOAD_NAME, new MFunction(LOAD_NAME, Load, new string[] { "file" }, null));
 
@@ -65,7 +65,7 @@ namespace MathsLanguage
             return value;
         }
 
-        public const string READSTRING_NAME = "readString";
+        public const string READSTRING_NAME = "read_string";
         public static MType ReadString(Interpreter interpreter, MArgumentList args)
         {
             return new MString(System.Console.ReadLine());

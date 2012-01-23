@@ -43,9 +43,7 @@ namespace MathsLanguage.Types
 
         public override MFraction ToMFraction()
         {
-            long numerator, denominator;
-            Operations.Misc.DoubleToFraction((double)value, out numerator, out denominator);
-            return new MFraction(numerator, denominator);
+            return new MFraction(value, 1);
         }
 
         public override long MIntegerValue { get { return value; } }

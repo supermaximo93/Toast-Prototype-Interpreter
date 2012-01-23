@@ -75,9 +75,7 @@ namespace MathsLanguage
                                 if (fraction != null)
                                 {
                                     fraction = new MFraction(fraction.Numerator, fraction.Denominator);
-                                    long numerator, denominator;
-                                    Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
-                                    fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs + rhs, false);
+                                    fraction.Add(numberA.MIntegerValue, 1);
                                     return fraction;
                                 }
                                 return new MInteger(numberA.MIntegerValue + numberB.MIntegerValue);
@@ -99,7 +97,7 @@ namespace MathsLanguage
                                     numerator = otherFraction.Numerator;
                                     denominator = otherFraction.Denominator;
                                 }
-                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs + rhs, true);
+                                fraction.Add(numerator, denominator);
                                 return fraction;
                             }
                     }
@@ -120,14 +118,12 @@ namespace MathsLanguage
                 {
                     case MType.M_INTEGER_TYPENAME:
                         {
-                            MFraction fraction = numberB as MFraction;
-                            if (fraction != null)
+                            MFraction rhsFraction = numberB as MFraction;
+                            if (rhsFraction != null)
                             {
-                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
-                                long numerator, denominator;
-                                Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
-                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs - rhs, false);
-                                return fraction;
+                                MFraction lhsFraction = new MFraction(numberA.MIntegerValue, 1);
+                                lhsFraction.Subtract(rhsFraction.Numerator, rhsFraction.Denominator);
+                                return lhsFraction;
                             }
                             return new MInteger(numberA.MIntegerValue - numberB.MIntegerValue);
                         }
@@ -148,7 +144,7 @@ namespace MathsLanguage
                                 numerator = otherFraction.Numerator;
                                 denominator = otherFraction.Denominator;
                             }
-                            fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs - rhs, true);
+                            fraction.Subtract(numerator, denominator);
                             return fraction;
                         }
                 }
@@ -172,9 +168,7 @@ namespace MathsLanguage
                             if (fraction != null)
                             {
                                 fraction = new MFraction(fraction.Numerator, fraction.Denominator);
-                                long numerator, denominator;
-                                Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
-                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs * rhs, false);
+                                fraction.Multiply(numberA.MIntegerValue, 1);
                                 return fraction;
                             }
                             return new MInteger(numberA.MIntegerValue * numberB.MIntegerValue);
@@ -196,7 +190,7 @@ namespace MathsLanguage
                                 numerator = otherFraction.Numerator;
                                 denominator = otherFraction.Denominator;
                             }
-                            fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs * rhs, true);
+                            fraction.Multiply(numerator, denominator);
                             return fraction;
                         }
                 }
@@ -216,14 +210,12 @@ namespace MathsLanguage
                 {
                     case MType.M_INTEGER_TYPENAME:
                         {
-                            MFraction fraction = numberB as MFraction;
-                            if (fraction != null)
+                            MFraction rhsFraction = numberB as MFraction;
+                            if (rhsFraction != null)
                             {
-                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
-                                long numerator, denominator;
-                                Operations.Misc.DoubleToFraction(numberA.MRealValue, out numerator, out denominator);
-                                fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs / rhs, false);
-                                return fraction;
+                                MFraction lhsFraction = new MFraction(numberA.MIntegerValue, 1);
+                                lhsFraction.Divide(rhsFraction.Numerator, rhsFraction.Denominator);
+                                return lhsFraction;
                             }
                             if (numberB.TypeName == MType.M_INTEGER_TYPENAME)
                                 return new MFraction(numberA.MIntegerValue, numberB.MIntegerValue);
@@ -246,7 +238,7 @@ namespace MathsLanguage
                                 numerator = otherFraction.Numerator;
                                 denominator = otherFraction.Denominator;
                             }
-                            fraction.DoOperation(numerator, denominator, (lhs, rhs) => lhs / rhs, true);
+                            fraction.Divide(numerator, denominator);
                             return fraction;
                         }
                 }

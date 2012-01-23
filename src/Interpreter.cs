@@ -54,6 +54,10 @@ namespace MathsLanguage
         public ProgramStack Stack { get { return stack; } }
 
         private bool alive;
+        public void Kill()
+        {
+            alive = false;
+        }
 
         private bool strict;
         public bool Strict { get { return strict; } }
@@ -135,11 +139,6 @@ namespace MathsLanguage
                 ++currentLine;
                 return System.Console.ReadLine();
             }
-        }
-
-        public void Kill()
-        {
-            alive = false;
         }
 
         private const string CONTROL_STATEMENT_LIST_STRING = "STRICT";
@@ -1052,7 +1051,7 @@ namespace MathsLanguage
 
             if (group.Count == 0) return MNil.Instance;
             else if (group.Count == 1) return MType.Parse(this, group[0]);
-            else return new MException(this, "Expression could not be evaluated completely");
+            else return new MException(this, "Statement could not be evaluated completely");
         }
 
     }
