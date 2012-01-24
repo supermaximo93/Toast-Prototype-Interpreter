@@ -184,26 +184,19 @@ namespace MathsLanguage.Types
 
 
             MType returnValue = null;
+            bool dontPop = false;
+
             if (hardCodedFunction != null) returnValue = hardCodedFunction.Invoke(interpreter, argList);
             else if (customFunction != "")
             {
                 returnValue = interpreter.Interpret(customFunction, true);
-                if (interpreter.Stack.Level < stackLevel)
-                {
-                    MVariable variable = returnValue as MVariable;
-                    if (variable != null) returnValue = variable.Value;
-                    return returnValue;
-                }
-                else if ((returnValue is MException) || (returnValue is MBreak))
-                {
-                    interpreter.Stack.Pop();
-                    return returnValue;
-                }
+                if (interpreter.Stack.Level < stackLevel) dontPop = true;
             }
             else if (block != null)
             {
                 MBlock previousCurrentBlock = interpreter.CurrentBlock;
                 interpreter.CurrentBlock = block;
+                block.ResetLine();
 
                 while (!block.EndOfBlock)
                 {
@@ -211,20 +204,12 @@ namespace MathsLanguage.Types
 
                     if (interpreter.Stack.Level < stackLevel)
                     {
-                        MVariable variable = returnValue as MVariable;
-                        if (variable != null) returnValue = variable.Value;
-                        block.ResetLine();
-                        return returnValue;
+                        dontPop = true;
+                        break;
                     }
-                    else if ((returnValue is MException) || (returnValue is MBreak))
-                    {
-                        interpreter.Stack.Pop();
-                        block.ResetLine();
-                        return returnValue;
-                    }
+                    else if ((returnValue is MException) || (returnValue is MBreak)) break;
                 }
 
-                block.ResetLine();
                 interpreter.CurrentBlock = previousCurrentBlock;
             }
 
@@ -233,7 +218,7 @@ namespace MathsLanguage.Types
                 if (variable != null) returnValue = variable.Value;
             }
 
-            interpreter.Stack.Pop();
+            if (!dontPop) interpreter.Stack.Pop();
 
             return returnValue ?? MNil.Instance;
         }
