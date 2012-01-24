@@ -575,7 +575,11 @@ namespace MathsLanguage
                                         statementGroup.AddRange(group.GetRange(otherwiseIndex + 1, group.Count - (otherwiseIndex + 1)));
                                         if (statementGroup.Count > 0) return ParseGroup(statementGroup);
                                     }
-                                    else return otherwiseBlock.Execute(this);
+                                    else
+                                    {
+                                        bool exitFromFunction;
+                                        return otherwiseBlock.Execute(this, out exitFromFunction);
+                                    }
                                 }
                                 else return result;
                             }
@@ -584,8 +588,10 @@ namespace MathsLanguage
                                 MException exception;
                                 MBlock block = new MBlock(this, out exception, true);
                                 if (exception != null) return exception;
-                                if (result.Value) return block.Execute(this, true);
-                                else if (block.HasOtherwise()) return block.Execute(this, false);
+
+                                bool exitFromFunction;
+                                if (result.Value) return block.Execute(this, out exitFromFunction, true);
+                                else if (block.HasOtherwise()) return block.Execute(this, out exitFromFunction, false);
                             }
                             return result;
                         }
@@ -645,7 +651,12 @@ namespace MathsLanguage
                                 {
                                     MType returnValue;
                                     if (statementGroup != null) returnValue = ParseGroup((Group)statementGroup.Clone());
-                                    else returnValue = block.Execute(this);
+                                    else
+                                    {
+                                        bool exitFromFunction;
+                                        returnValue = block.Execute(this, out exitFromFunction);
+                                        if (exitFromFunction) return returnValue;
+                                    }
                                     if (returnValue is MException) return returnValue;
                                     if (returnValue is MBreak) return MNil.Instance;
                                 }
@@ -690,7 +701,9 @@ namespace MathsLanguage
                             MBlock block = value as MBlock;
                             if (function != null)
                             {
-                                functionReturnValue = block.Execute(this);
+                                bool exitFromFunction;
+                                functionReturnValue = block.Execute(this, out exitFromFunction);
+                                if (exitFromFunction) return functionReturnValue;
                                 functionCalled = true;
                             }
                             else
@@ -709,7 +722,9 @@ namespace MathsLanguage
                                         block = variable.Value as MBlock;
                                         if (block != null)
                                         {
-                                            functionReturnValue = block.Execute(this);
+                                            bool exitFromFunction;
+                                            functionReturnValue = block.Execute(this, out exitFromFunction);
+                                            if (exitFromFunction) return functionReturnValue;
                                             functionCalled = true;
                                         }
                                     }

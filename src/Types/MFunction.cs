@@ -207,7 +207,7 @@ namespace MathsLanguage.Types
                         dontPop = true;
                         break;
                     }
-                    else if ((returnValue is MException) || (returnValue is MBreak)) break;
+                    else if (returnValue is MException) break;
                 }
 
                 interpreter.CurrentBlock = previousCurrentBlock;

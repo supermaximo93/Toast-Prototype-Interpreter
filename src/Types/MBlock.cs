@@ -129,8 +129,9 @@ namespace MathsLanguage.Types
             return statements[currentLine];
         }
 
-        public MType Execute(Interpreter interpreter, bool beforeOtherwise = true)
+        public MType Execute(Interpreter interpreter, out bool exitFromFunction, bool beforeOtherwise = true, bool inLoop = false)
         {
+            exitFromFunction = false;
             if (!beforeOtherwise && (otherwiseLocation < 0)) return new MException(interpreter, "No otherwise statement found");
 
             int start, end;
@@ -154,6 +155,7 @@ namespace MathsLanguage.Types
                 end = statements.Count - 1;
             }
 
+            int stackLevel = interpreter.Stack.Level;
             MBlock previousCurrentBlock = interpreter.CurrentBlock;
             interpreter.CurrentBlock = this;
 
@@ -161,11 +163,14 @@ namespace MathsLanguage.Types
             for (currentLine = start; currentLine <= end; ++currentLine)
             {
                 returnValue = interpreter.Interpret(statements[currentLine], true);
-                if ((returnValue is MException)  || (returnValue is MBreak))
+
+                if (interpreter.Stack.Level < stackLevel)
                 {
-                    interpreter.CurrentBlock = previousCurrentBlock;
-                    return returnValue;
+                    exitFromFunction = true;
+                    break;
                 }
+
+                if ((returnValue is MException) || (returnValue is MBreak)) break;
             }
 
             interpreter.CurrentBlock = previousCurrentBlock;
