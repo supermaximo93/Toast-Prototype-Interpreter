@@ -145,7 +145,7 @@ namespace MathsLanguage
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=", "\"", "{", "}", "[", "]", "(", ")",
             MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
-            "let", "yes", "no", "nil", "if", "otherwise", "begin", "end", "while", "for", "break", "or", "and"
+            "let", "yes", "no", "nil", "if", "else", "begin", "end", "while", "for", "break", "or", "and"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=",  "\"", "{", "}", "[", "]", "(", ")",
@@ -548,37 +548,37 @@ namespace MathsLanguage
 
                             if (group.Count > commaIndex + 1)
                             {
-                                int otherwiseIndex = group.IndexOf("otherwise", commaIndex + 1);
+                                int elseIndex = group.IndexOf("else", commaIndex + 1);
 
-                                MBlock otherwiseBlock = null;
-                                if (otherwiseIndex == group.Count - 1)
+                                MBlock elseBlock = null;
+                                if (elseIndex == group.Count - 1)
                                 {
                                     MException exception;
-                                    otherwiseBlock = new MBlock(this, out exception, false);
+                                    elseBlock = new MBlock(this, out exception, false);
                                     if (exception != null) return exception;
                                 }
 
                                 if (result.Value)
                                 {
                                     Group statementGroup = new Group(null);
-                                    if (otherwiseIndex < 0)
+                                    if (elseIndex < 0)
                                         statementGroup.AddRange(group.GetRange(commaIndex + 1, group.Count - (commaIndex + 1)));
-                                    else statementGroup.AddRange(group.GetRange(commaIndex + 1, otherwiseIndex - (commaIndex + 1)));
+                                    else statementGroup.AddRange(group.GetRange(commaIndex + 1, elseIndex - (commaIndex + 1)));
 
                                     if (statementGroup.Count > 0) return ParseGroup(statementGroup);
                                 }
-                                else if (otherwiseIndex >= 0)
+                                else if (elseIndex >= 0)
                                 {
-                                    if (otherwiseBlock == null)
+                                    if (elseBlock == null)
                                     {
                                         Group statementGroup = new Group(null);
-                                        statementGroup.AddRange(group.GetRange(otherwiseIndex + 1, group.Count - (otherwiseIndex + 1)));
+                                        statementGroup.AddRange(group.GetRange(elseIndex + 1, group.Count - (elseIndex + 1)));
                                         if (statementGroup.Count > 0) return ParseGroup(statementGroup);
                                     }
                                     else
                                     {
                                         bool exitFromFunction;
-                                        return otherwiseBlock.Execute(this, out exitFromFunction);
+                                        return elseBlock.Execute(this, out exitFromFunction);
                                     }
                                 }
                                 else return result;
@@ -606,8 +606,8 @@ namespace MathsLanguage
                     case "end":
                         return new MException(this, "Unexpected keyword 'end'");
 
-                    case "otherwise":
-                        return new MException(this, "Unexpected keyword 'otherwise'");
+                    case "else":
+                        return new MException(this, "Unexpected keyword 'else'");
 
                     case "while":
                         {

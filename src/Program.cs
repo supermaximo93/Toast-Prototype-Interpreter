@@ -9,7 +9,7 @@ namespace MathsLanguage
     {
         static void Main(string[] args)
         {
-            MathsLanguage.Types.MFunction.Init();
+            Types.MFunction.Init();
             Interpreter interpreter = new Interpreter();
             interpreter.Run(args.Length > 0 ? args[0] : "");
         }

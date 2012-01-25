@@ -10,14 +10,14 @@ namespace MathsLanguage.Types
     class MBlock : MType
     {
         List<string> statements;
-        int otherwiseLocation, currentLine;
-        bool otherwiseAllowed;
+        int elseLocation, currentLine;
+        bool elseAllowed;
 
-        public MBlock(Interpreter interpreter, out MException exception, bool otherwiseAllowed)
+        public MBlock(Interpreter interpreter, out MException exception, bool elseAllowed)
         {
             statements = new List<string>();
-            otherwiseLocation = -1;
-            this.otherwiseAllowed = otherwiseAllowed;
+            elseLocation = -1;
+            this.elseAllowed = elseAllowed;
             exception = null;
             currentLine = -1;
 
@@ -80,36 +80,36 @@ namespace MathsLanguage.Types
                 }
 
                 bool breakNow = false; // For a double break
-                int otherwiseIndex = -1;
-                while ((otherwiseIndex = symbolGroup.IndexOf("otherwise", otherwiseIndex + 1)) >= 0)
+                int elseIndex = -1;
+                while ((elseIndex = symbolGroup.IndexOf("else", elseIndex + 1)) >= 0)
                 {
-                    if (otherwiseIndex == 0)
+                    if (elseIndex == 0)
                     {
                         if (blockLevel == 0)
                         {
-                            if ((otherwiseLocation < 0) && otherwiseAllowed)
+                            if ((elseLocation < 0) && elseAllowed)
                             {
-                                otherwiseLocation = statements.Count;
-                                if (otherwiseIndex < symbolGroup.Count - 1)
+                                elseLocation = statements.Count;
+                                if (elseIndex < symbolGroup.Count - 1)
                                 {
-                                    statements.Add("otherwise");
+                                    statements.Add("else");
                                     statements.Add(statement.Substring(10, statement.Length - 10));
                                     breakNow = true;
                                 }
                             }
                             else
                             {
-                                exception = new MException(interpreter, "Unexpected keyword 'otherwise'", "otherwise already used");
+                                exception = new MException(interpreter, "Unexpected keyword 'else'", "else already used");
                                 statements.Clear();
                                 breakNow = true;
                                 break;
                             }
                         }
-                        else if (otherwiseIndex < symbolGroup.Count - 1) --blockLevel;
+                        else if (elseIndex < symbolGroup.Count - 1) --blockLevel;
                     }
-                    else if (symbolGroup.LastIndexOf("if", otherwiseIndex) >= 0)
+                    else if (symbolGroup.LastIndexOf("if", elseIndex) >= 0)
                     {
-                        if (otherwiseIndex == symbolGroup.Count - 1) ++blockLevel;
+                        if (elseIndex == symbolGroup.Count - 1) ++blockLevel;
                     }
                 }
                 if (breakNow) break;
@@ -120,7 +120,7 @@ namespace MathsLanguage.Types
 
         public bool HasOtherwise()
         {
-            return (otherwiseLocation >= 0);
+            return (elseLocation >= 0);
         }
 
         public string GetInput()
@@ -132,20 +132,20 @@ namespace MathsLanguage.Types
         public MType Execute(Interpreter interpreter, out bool exitFromFunction, bool beforeOtherwise = true, bool inLoop = false)
         {
             exitFromFunction = false;
-            if (!beforeOtherwise && (otherwiseLocation < 0)) return new MException(interpreter, "No otherwise statement found");
+            if (!beforeOtherwise && (elseLocation < 0)) return new MException(interpreter, "No else statement found");
 
             int start, end;
 
-            if (otherwiseAllowed)
+            if (elseAllowed)
             {
                 if (beforeOtherwise)
                 {
                     start = 0;
-                    end = (otherwiseLocation > 0 ? otherwiseLocation : statements.Count) - 1;
+                    end = (elseLocation > 0 ? elseLocation : statements.Count) - 1;
                 }
                 else
                 {
-                    start = otherwiseLocation + 1;
+                    start = elseLocation + 1;
                     end = statements.Count - 1;
                 }
             }
