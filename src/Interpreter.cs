@@ -3,30 +3,30 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.Text;
-using MathsLanguage.Types;
-using MathsLanguage.Types.Singletons;
+using Toast.Types;
+using Toast.Types.Singletons;
 
-namespace MathsLanguage
+namespace Toast
 {
     class Interpreter
     {
         public class ProgramStack
         {
-            private Stack<Dictionary<string, MVariable>> stack;
+            private Stack<Dictionary<string, TVariable>> stack;
 
             private int level;
             public int Level { get { return level; } }
 
             public ProgramStack()
             {
-                stack = new Stack<Dictionary<string, MVariable>>();
-                stack.Push(new Dictionary<string, MVariable>());
+                stack = new Stack<Dictionary<string, TVariable>>();
+                stack.Push(new Dictionary<string, TVariable>());
                 level = 0;
             }
 
             public void Push()
             {
-                stack.Push(new Dictionary<string, MVariable>());
+                stack.Push(new Dictionary<string, TVariable>());
                 ++level;
             }
 
@@ -37,14 +37,14 @@ namespace MathsLanguage
                 --level;
             }
 
-            public void AddVariable(MVariable variable)
+            public void AddVariable(TVariable variable)
             {
                 stack.Peek().Add(variable.Identifier, variable);
             }
 
-            public MVariable FindVariable(string name)
+            public TVariable FindVariable(string name)
             {
-                MVariable variable;
+                TVariable variable;
                 if (stack.Peek().TryGetValue(name, out variable)) return variable;
                 return null;
             }
@@ -69,8 +69,8 @@ namespace MathsLanguage
         private int currentLine;
         public int CurrentLine { get { return currentLine; } }
 
-        MBlock currentBlock;
-        public MBlock CurrentBlock
+        TBlock currentBlock;
+        public TBlock CurrentBlock
         {
             get { return currentBlock; }
             set { currentBlock = value; }
@@ -85,7 +85,7 @@ namespace MathsLanguage
             currentBlock = null;
             file = null;
 
-            System.Console.WriteLine("Maths Language Interpreter version 0.1 by Max Foster\n");
+            System.Console.WriteLine("Toast Interpreter version 0.1 by Max Foster\n");
         }
 
         public void Run(string fileName)
@@ -104,7 +104,7 @@ namespace MathsLanguage
                 }
             }
             
-            while ((Interpret(GetInput()).TypeName != MType.M_EXCEPTION_TYPENAME) && alive) ;
+            while ((Interpret(GetInput()).TypeName != TType.T_EXCEPTION_TYPENAME) && alive) ;
 
             if (file != null) file.Close();
             System.Console.WriteLine("\nInterpreter execution halted");
@@ -144,12 +144,12 @@ namespace MathsLanguage
         private const string CONTROL_STATEMENT_LIST_STRING = "STRICT";
         public static readonly string[] RESERVED_SYMBOLS = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=", "\"", "{", "}", "[", "]", "(", ")",
-            MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString(),
+            TType.DIRECTIVE_CHARACTER.ToString(), TType.REFERENCE_CHARACTER.ToString(), TType.DEREFERENCE_CHARACTER.ToString(),
             "let", "yes", "no", "nil", "if", "else", "begin", "end", "while", "for", "break", "or", "and"
         };
         public static readonly string[] SYMBOLS_TO_SPLIT_BY = new string[] {
             "^", "/", "*", "+", "-", "~=", ",", "|", ">", "<", ">=", "<=", "=", "/=",  "\"", "{", "}", "[", "]", "(", ")",
-            MType.DIRECTIVE_CHARACTER.ToString(), MType.REFERENCE_CHARACTER.ToString(), MType.DEREFERENCE_CHARACTER.ToString()
+            TType.DIRECTIVE_CHARACTER.ToString(), TType.REFERENCE_CHARACTER.ToString(), TType.DEREFERENCE_CHARACTER.ToString()
         };
 
         public class Group : ArrayList
@@ -179,19 +179,19 @@ namespace MathsLanguage
             }
         }
 
-        public Group SplitIntoSymbols(string command, out MException exception)
+        public Group SplitIntoSymbols(string command, out TException exception)
         {
             exception = null;
             command = command.Trim();
 
             List<string> strings = new List<string>();
             int index = -1;
-            while ((index = command.IndexOf(MType.STRING_CHARACTER, index + 1)) >= 0)
+            while ((index = command.IndexOf(TType.STRING_CHARACTER, index + 1)) >= 0)
             {
-                int index2 = command.IndexOf(MType.STRING_CHARACTER, index + 1);
+                int index2 = command.IndexOf(TType.STRING_CHARACTER, index + 1);
                 if (index2 < 0)
                 {
-                    exception = new MException(this, "String not closed", "another \" required");
+                    exception = new TException(this, "String not closed", "another \" required");
                     return null;
                 }
 
@@ -274,19 +274,19 @@ namespace MathsLanguage
                 }
                 else if (s == "\"")
                 {
-                    currentGroup.Add(new MString(strings[stringId]));
+                    currentGroup.Add(new TString(strings[stringId]));
                     ++stringId;
                 }
                 else currentGroup.Add(s);
             }
 
-            if (groupDepth > 0) new MException(this, "Too few closing brackets", groupDepth.ToString() + " required");
-            else if (groupDepth < 0) new MException(this, "Too many closing brackets", "remove " + (-groupDepth).ToString());
+            if (groupDepth > 0) new TException(this, "Too few closing brackets", groupDepth.ToString() + " required");
+            else if (groupDepth < 0) new TException(this, "Too many closing brackets", "remove " + (-groupDepth).ToString());
 
             return superGroup;
         }
 
-        public MType Interpret(string command, bool isFunctionCall = false)
+        public TType Interpret(string command, bool isFunctionCall = false)
         {
             command = command.Trim();
 
@@ -297,23 +297,23 @@ namespace MathsLanguage
                     file.Close();
                     file = null;
                     System.Console.WriteLine();
-                    return MNil.Instance;
+                    return TNil.Instance;
                 }
-                return new MException(this, "Halting interpreter execution");
+                return new TException(this, "Halting interpreter execution");
             }
-            if (command == "") return MNil.Instance;
-            if (command.StartsWith("//")) return MNil.Instance;
+            if (command == "") return TNil.Instance;
+            if (command.StartsWith("//")) return TNil.Instance;
 
-            MException exception;
+            TException exception;
             Group group = SplitIntoSymbols(command, out exception);
             if (exception != null) return exception;
 
-            MType value = ParseGroup(group);
+            TType value = ParseGroup(group);
             if (value != null)
             {
                 if (isFunctionCall) return value;
 
-                exception = value as MException;
+                exception = value as TException;
                 if (exception == null)
                 {
                     if (!RunningFromFile) System.Console.WriteLine("-> {0}", value.ToCSString());
@@ -322,17 +322,17 @@ namespace MathsLanguage
             }
 
             if ((currentBlock == null) && !RunningFromFile) System.Console.WriteLine();
-            return MNil.Instance;
+            return TNil.Instance;
         }
 
-        public MType ParseGroup(Group group)
+        public TType ParseGroup(Group group)
         {
-            if (group.Count == 0) return new MArgumentList();
+            if (group.Count == 0) return new TArgumentList();
 
             string firstSymbolStr = group[0] as string;
             if (firstSymbolStr != null)
             {
-                if (firstSymbolStr == MType.DIRECTIVE_CHARACTER.ToString())
+                if (firstSymbolStr == TType.DIRECTIVE_CHARACTER.ToString())
                 {
                     string directive = "";
                     if (group.Count > 1)
@@ -349,25 +349,25 @@ namespace MathsLanguage
                                         Group conditionGroup = new Group(null);
                                         conditionGroup.AddRange(group.GetRange(2, group.Count - 2));
 
-                                        MType value = ParseGroup(conditionGroup);
-                                        if (value is MException) return value;
+                                        TType value = ParseGroup(conditionGroup);
+                                        if (value is TException) return value;
 
-                                        MBoolean result = value as MBoolean;
-                                        if (result == null) return new MException(this, "Directive 'STRICT' could not be used",
+                                        TBoolean result = value as TBoolean;
+                                        if (result == null) return new TException(this, "Directive 'STRICT' could not be used",
                                             "invalid parameter; use yes or no");
 
                                         strict = result.Value;
                                         if (strict) System.Console.WriteLine("Interpreter running in strict mode");
                                         else System.Console.WriteLine("Interpreter not running in strict mode");
 
-                                        return MNil.Instance;
+                                        return TNil.Instance;
                                     }
-                                    else return new MException(this, "Directive 'STRICT' could not be used",
+                                    else return new TException(this, "Directive 'STRICT' could not be used",
                                         "invalid parameter (none given); use yes or no");
                             }
                         }
                     }
-                    return new MException(this, "Could not use directive", "directive '" + directive + "' not recognised");
+                    return new TException(this, "Could not use directive", "directive '" + directive + "' not recognised");
                 }
 
                 switch (firstSymbolStr)
@@ -375,92 +375,92 @@ namespace MathsLanguage
                     case "let":
                         
                         int equalsIndex = group.IndexOf("=");
-                        if (equalsIndex < 0) return new MException(this, "Variable or function could not be assigned a value");
+                        if (equalsIndex < 0) return new TException(this, "Variable or function could not be assigned a value");
                         int refIndex;
 
-                        while ((refIndex = group.IndexOf(MType.REFERENCE_CHARACTER.ToString())) >= 0)
+                        while ((refIndex = group.IndexOf(TType.REFERENCE_CHARACTER.ToString())) >= 0)
                         {
                             if (refIndex > equalsIndex) break;
                             if (refIndex + 1 > group.Count)
-                                return new MException(this, "Invalid expression term '" + MType.REFERENCE_CHARACTER + "'");
+                                return new TException(this, "Invalid expression term '" + TType.REFERENCE_CHARACTER + "'");
 
-                            MType variable = MType.Parse(this, group[refIndex + 1]);
-                            if (variable is MException) return variable;
-                            if (!(variable is MVariable)) return new MException(this, "Attempted creation of reference to value",
+                            TType variable = TType.Parse(this, group[refIndex + 1]);
+                            if (variable is TException) return variable;
+                            if (!(variable is TVariable)) return new TException(this, "Attempted creation of reference to value",
                                 "expected variable identifier");
 
-                            group[refIndex] = new MVariable("reference", variable);
+                            group[refIndex] = new TVariable("reference", variable);
                             group.RemoveAt(refIndex + 1);
                         }
 
-                        while ((refIndex = group.IndexOf(MType.DEREFERENCE_CHARACTER.ToString())) >= 0)
+                        while ((refIndex = group.IndexOf(TType.DEREFERENCE_CHARACTER.ToString())) >= 0)
                         {
                             if (refIndex > equalsIndex) break;
                             if (refIndex + 1 > group.Count)
-                                return new MException(this, "Invalid expression term '" + MType.DEREFERENCE_CHARACTER + "'");
+                                return new TException(this, "Invalid expression term '" + TType.DEREFERENCE_CHARACTER + "'");
 
-                            MType variable = MType.Parse(this, group[refIndex + 1]);
-                            if (variable is MException) return variable;
-                            if (!(variable is MVariable)) return new MException(this, "Attempted dereference of value",
+                            TType variable = TType.Parse(this, group[refIndex + 1]);
+                            if (variable is TException) return variable;
+                            if (!(variable is TVariable)) return new TException(this, "Attempted dereference of value",
                                 "expected variable identifier");
 
-                            group[refIndex] = ((MVariable)variable).Value;
-                            if (!((MType)group[refIndex] is MVariable) && !((MType)group[refIndex] is MFunction))
-                                return new MException(this, "Dereference of value type variable", "expected reference variable");
+                            group[refIndex] = ((TVariable)variable).Value;
+                            if (!((TType)group[refIndex] is TVariable) && !((TType)group[refIndex] is TFunction))
+                                return new TException(this, "Dereference of value type variable", "expected reference variable");
                             group.RemoveAt(refIndex + 1);
                         }
 
-                        if (group.Count == 1) return new MException(this, "Could not assign variable", "no variable name given");
+                        if (group.Count == 1) return new TException(this, "Could not assign variable", "no variable name given");
 
                         string variableName = group[1] as string;
-                        MVariable existingVariable = null;
+                        TVariable existingVariable = null;
 
                         if (variableName == null)
                         {
-                            MException exception = new MException(this, "Could not assign variable", "invalid variable name given");
+                            TException exception = new TException(this, "Could not assign variable", "invalid variable name given");
 
                             Group groupToParse = group[1] as Group;
-                            MType value = group[1] as MType;
+                            TType value = group[1] as TType;
                             if (groupToParse != null) value = ParseGroup(groupToParse);
                             if (value == null) return exception;
 
-                            MVariable variable = value as MVariable;
+                            TVariable variable = value as TVariable;
                             if (variable != null) existingVariable = variable;
                             else
                             {
-                                MFunction function = value as MFunction;
+                                TFunction function = value as TFunction;
                                 if (function != null) variableName = function.Name;
                                 else return exception;
                             }
                         }
 
-                        if (group.Count == 2) return new MException(this, "Variable could not be assigned a value");
+                        if (group.Count == 2) return new TException(this, "Variable could not be assigned a value");
                         string assignmentOperator = group[2] as string;
                         if (assignmentOperator == null)
                         {
                             Group paramGroup = group[2] as Group;
-                            if (paramGroup == null) return new MException(this, "Variable could not be assigned a value",
+                            if (paramGroup == null) return new TException(this, "Variable could not be assigned a value",
                                 "value to assign to variable must be given");
 
-                            MParameterList paramList = new MParameterList();
+                            TParameterList paramList = new TParameterList();
                             bool commaExpected = false;
                             for (int i = 0; i < paramGroup.Count; ++i)
                             {
                                 if (commaExpected && (i == paramGroup.Count - 1))
-                                    return new MException(this, "Parameters could not be parsed", "last parameter missing");
+                                    return new TException(this, "Parameters could not be parsed", "last parameter missing");
 
                                 string paramName = paramGroup[i] as string;
 
                                 if (commaExpected && (paramName != ",")) paramName = null;
 
-                                if (paramName == null) return new MException(this, "Parameters could not be parsed",
+                                if (paramName == null) return new TException(this, "Parameters could not be parsed",
                                     "invalid parameter name given");
 
                                 if (!commaExpected) paramList.Add(paramName);
                                 commaExpected = !commaExpected;
                             }
 
-                            MException exception = new MException(this, "Function could not be given a body",
+                            TException exception = new TException(this, "Function could not be given a body",
                                 "function body must be given");
 
                             if (group.Count == 3) return exception;
@@ -468,29 +468,29 @@ namespace MathsLanguage
                             if (assignmentOperator == null) return exception;
                             else if (assignmentOperator != "=") return exception;
 
-                            MFunction function;
+                            TFunction function;
                             if (group.Count == 4)
                             {
-                                MBlock block = new MBlock(this, out exception, false);
+                                TBlock block = new TBlock(this, out exception, false);
                                 if (exception != null) return exception;
-                                function = new MFunction(variableName ?? existingVariable.Identifier, block,
+                                function = new TFunction(variableName ?? existingVariable.Identifier, block,
                                     paramList.ParameterNames, null);
                             }
                             else
                             {
                                 Group funcBody = new Group(null);
                                 funcBody.AddRange(group.GetRange(4, group.Count - 4));
-                                function = new MFunction(variableName ?? existingVariable.Identifier, funcBody.ToString(),
+                                function = new TFunction(variableName ?? existingVariable.Identifier, funcBody.ToString(),
                                     paramList.ParameterNames, null);
                             }
 
-                            exception = MFunction.AddFunction(this, function);
+                            exception = TFunction.AddFunction(this, function);
                             if (exception != null) return exception;
 
                             return function;
                         }
                         {
-                            MException exception = new MException(this, "Variable could not be assigned a value",
+                            TException exception = new TException(this, "Variable could not be assigned a value",
                                 "value to assign to variable must be given");
 
                             if (assignmentOperator != "=") return exception;
@@ -498,25 +498,33 @@ namespace MathsLanguage
                             Group valueGroup = new Group(null);
                             valueGroup.AddRange(group.GetRange(3, group.Count - 3));
 
-                            MType value = ParseGroup(valueGroup);
-                            if (value is MException) return value;
+                            TType value = ParseGroup(valueGroup);
+                            if (value is TException) return value;
 
-                            MVariable variable = value as MVariable;
+                            TVariable variable = value as TVariable;
                             if (variable != null) value = variable.Value;
 
                             variable = existingVariable ?? stack.FindVariable(variableName);
-                            if (value == variable) return new MException(this, "Illegal assignment attempted",
+                            if (value == variable) return new TException(this, "Illegal assignment attempted",
                                 "variables cannot reference themselves");
-                            MVariable circularRefCheckVar = value as MVariable;
-                            if (circularRefCheckVar != null)
+
+                            TVariable circularRefCheckVar = value as TVariable;
+                            while (circularRefCheckVar != null)
                             {
-                                if (circularRefCheckVar.Value == variable)
-                                    return new MException(this, "Illegal assignment attempted", "circular reference detected");
+                                TVariable variableValue = circularRefCheckVar.Value as TVariable;
+                                if (variableValue != null)
+                                {
+                                    if (variableValue == variable)
+                                        return new TException(this, "Illegal assignment attempted",
+                                            "circular reference detected");
+                                    else circularRefCheckVar = variableValue;
+                                }
+                                else circularRefCheckVar = null;
                             }
 
                             if (variable == null)
                             {
-                                variable = new MVariable(variableName, value);
+                                variable = new TVariable(variableName, value);
                                 Stack.AddVariable(variable);
                             }
                             else variable.Value = value;
@@ -526,35 +534,35 @@ namespace MathsLanguage
 
                     case "if":
                         {
-                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                            if (group.Count == 1) return new TException(this, "Statement could not be evaluated",
                                 "if statement must be given a condition");
 
                             int commaIndex = group.IndexOf(",");
-                            if (commaIndex < 0) return new MException(this, "if statment invalid",
+                            if (commaIndex < 0) return new TException(this, "if statment invalid",
                                 "comma required after condition");
 
-                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                            if (group.Count == 1) return new TException(this, "Statement could not be evaluated",
                                 "if statement must be given a condition");
 
                             Group conditionGroup = new Group(null);
                             conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
 
-                            MType value = ParseGroup(conditionGroup);
-                            if (value is MException) return value;
+                            TType value = ParseGroup(conditionGroup);
+                            if (value is TException) return value;
 
-                            MBoolean result = value as MBoolean;
-                            if (result == null) return new MException(this, "Condition does not evaluate to a boolean value",
+                            TBoolean result = value as TBoolean;
+                            if (result == null) return new TException(this, "Condition does not evaluate to a boolean value",
                                 "yes or no");
 
                             if (group.Count > commaIndex + 1)
                             {
                                 int elseIndex = group.IndexOf("else", commaIndex + 1);
 
-                                MBlock elseBlock = null;
+                                TBlock elseBlock = null;
                                 if (elseIndex == group.Count - 1)
                                 {
-                                    MException exception;
-                                    elseBlock = new MBlock(this, out exception, false);
+                                    TException exception;
+                                    elseBlock = new TBlock(this, out exception, false);
                                     if (exception != null) return exception;
                                 }
 
@@ -585,8 +593,8 @@ namespace MathsLanguage
                             }
 
                             {
-                                MException exception;
-                                MBlock block = new MBlock(this, out exception, true);
+                                TException exception;
+                                TBlock block = new TBlock(this, out exception, true);
                                 if (exception != null) return exception;
 
                                 bool exitFromFunction;
@@ -598,34 +606,34 @@ namespace MathsLanguage
 
                     case "begin":
                         {
-                            MException exception;
-                            MType block = new MBlock(this, out exception, false);
+                            TException exception;
+                            TType block = new TBlock(this, out exception, false);
                             return exception ?? block;
                         }
 
                     case "end":
-                        return new MException(this, "Unexpected keyword 'end'");
+                        return new TException(this, "Unexpected keyword 'end'");
 
                     case "else":
-                        return new MException(this, "Unexpected keyword 'else'");
+                        return new TException(this, "Unexpected keyword 'else'");
 
                     case "while":
                         {
-                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                            if (group.Count == 1) return new TException(this, "Statement could not be evaluated",
                                 "if statement must be given a condition");
 
                             int commaIndex = group.IndexOf(",");
-                            if (commaIndex < 0) return new MException(this, "if statment invalid",
+                            if (commaIndex < 0) return new TException(this, "if statment invalid",
                                 "comma required after condition");
 
-                            if (group.Count == 1) return new MException(this, "Statement could not be evaluated",
+                            if (group.Count == 1) return new TException(this, "Statement could not be evaluated",
                                 "if statement must be given a condition");
 
                             Group conditionGroup = new Group(null);
                             conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
 
                             Group statementGroup = null;
-                            MBlock block = null;
+                            TBlock block = null;
                             if (group.Count > commaIndex + 1)
                             {
                                 statementGroup = new Group(null);
@@ -633,23 +641,23 @@ namespace MathsLanguage
                             }
                             else
                             {
-                                MException exception;
-                                block = new MBlock(this, out exception, false);
+                                TException exception;
+                                block = new TBlock(this, out exception, false);
                                 if (exception != null) return exception;
                             }
 
                             while (true)
                             {
-                                MType value = ParseGroup((Group)conditionGroup.Clone());
-                                if (value is MException) return value;
+                                TType value = ParseGroup((Group)conditionGroup.Clone());
+                                if (value is TException) return value;
 
-                                MBoolean result = value as MBoolean;
-                                if (result == null) return new MException(this, "Condition does not evaluate to a boolean value",
+                                TBoolean result = value as TBoolean;
+                                if (result == null) return new TException(this, "Condition does not evaluate to a boolean value",
                                     "yes or no");
 
                                 if (result.Value)
                                 {
-                                    MType returnValue;
+                                    TType returnValue;
                                     if (statementGroup != null) returnValue = ParseGroup((Group)statementGroup.Clone());
                                     else
                                     {
@@ -657,12 +665,12 @@ namespace MathsLanguage
                                         returnValue = block.Execute(this, out exitFromFunction);
                                         if (exitFromFunction) return returnValue;
                                     }
-                                    if (returnValue is MException) return returnValue;
-                                    if (returnValue is MBreak) return MNil.Instance;
+                                    if (returnValue is TException) return returnValue;
+                                    if (returnValue is TBreak) return TNil.Instance;
                                 }
-                                else return MNil.Instance;
+                                else return TNil.Instance;
 
-                                if (!alive) return MNil.Instance;
+                                if (!alive) return TNil.Instance;
                             }
                         }
 
@@ -676,21 +684,21 @@ namespace MathsLanguage
                 Group nextGroup = group[i] as Group;
                 if (nextGroup != null)
                 {
-                    MType value = ParseGroup(nextGroup);
-                    if (value is MException) return value;
+                    TType value = ParseGroup(nextGroup);
+                    if (value is TException) return value;
                     group[i] = value;
                 }
 
-                MType argument = group[i] as MType;
+                TType argument = group[i] as TType;
                 if (argument != null)
                 {
                     if (i - 1 >= 0)
                     {
                         bool functionCalled = false;
-                        MType functionReturnValue = null;
+                        TType functionReturnValue = null;
 
-                        MType value = MType.Parse(this, group[i - 1]);
-                        MFunction function = value as MFunction;
+                        TType value = TType.Parse(this, group[i - 1]);
+                        TFunction function = value as TFunction;
                         if (function != null)
                         {
                             functionReturnValue = function.Call(this, argument);
@@ -698,7 +706,7 @@ namespace MathsLanguage
                         }
                         else
                         {
-                            MBlock block = value as MBlock;
+                            TBlock block = value as TBlock;
                             if (function != null)
                             {
                                 bool exitFromFunction;
@@ -708,10 +716,10 @@ namespace MathsLanguage
                             }
                             else
                             {
-                                MVariable variable = value as MVariable;
+                                TVariable variable = value as TVariable;
                                 if (variable != null)
                                 {
-                                    function = variable.Value as MFunction;
+                                    function = variable.Value as TFunction;
                                     if (function != null)
                                     {
                                         functionReturnValue = function.Call(this, argument);
@@ -719,7 +727,7 @@ namespace MathsLanguage
                                     }
                                     else
                                     {
-                                        block = variable.Value as MBlock;
+                                        block = variable.Value as TBlock;
                                         if (block != null)
                                         {
                                             bool exitFromFunction;
@@ -734,7 +742,7 @@ namespace MathsLanguage
 
                         if (functionCalled)
                         {
-                            if (functionReturnValue is MException) return functionReturnValue;
+                            if (functionReturnValue is TException) return functionReturnValue;
                             group[i - 1] = functionReturnValue;
                             group.RemoveAt(i);
                             --i;
@@ -745,61 +753,61 @@ namespace MathsLanguage
 
             int index;
 
-            while ((index = group.LastIndexOf(MType.REFERENCE_CHARACTER.ToString())) >= 0)
+            while ((index = group.LastIndexOf(TType.REFERENCE_CHARACTER.ToString())) >= 0)
             {
                 if (index + 1 > group.Count)
-                    return new MException(this, "Invalid expression term '" + MType.REFERENCE_CHARACTER + "' at end of statement");
+                    return new TException(this, "Invalid expression term '" + TType.REFERENCE_CHARACTER + "' at end of statement");
 
-                MType variable = MType.Parse(this, group[index + 1]);
-                if (variable is MException) return variable;
-                if (!(variable is MVariable)) return new MException(this, "Attempted creation of reference to value", "expected variable identifier");
+                TType variable = TType.Parse(this, group[index + 1]);
+                if (variable is TException) return variable;
+                if (!(variable is TVariable)) return new TException(this, "Attempted creation of reference to value", "expected variable identifier");
 
-                group[index] = new MVariable("reference", variable);
+                group[index] = new TVariable("reference", variable);
                 group.RemoveAt(index + 1);
             }
 
-            while ((index = group.LastIndexOf(MType.DEREFERENCE_CHARACTER.ToString())) >= 0)
+            while ((index = group.LastIndexOf(TType.DEREFERENCE_CHARACTER.ToString())) >= 0)
             {
                 if (index + 1 > group.Count)
-                    return new MException(this, "Invalid expression term '" + MType.DEREFERENCE_CHARACTER + "' at end of statement");
+                    return new TException(this, "Invalid expression term '" + TType.DEREFERENCE_CHARACTER + "' at end of statement");
 
-                MType variable = MType.Parse(this, group[index + 1]);
-                if (variable is MException) return variable;
-                if (!(variable is MVariable)) return new MException(this, "Attempted dereference of value", "expected variable identifier");
+                TType variable = TType.Parse(this, group[index + 1]);
+                if (variable is TException) return variable;
+                if (!(variable is TVariable)) return new TException(this, "Attempted dereference of value", "expected variable identifier");
 
-                group[index] = ((MVariable)variable).Value;
-                if (!((MType)group[index] is MVariable) && !((MType)group[index] is MFunction))
-                    return new MException(this, "Dereference of value type variable", "expected reference variable");
+                group[index] = ((TVariable)variable).Value;
+                if (!((TType)group[index] is TVariable) && !((TType)group[index] is TFunction))
+                    return new TException(this, "Dereference of value type variable", "expected reference variable");
                 group.RemoveAt(index + 1);
             }
 
             while ((index = group.IndexOf("-")) >= 0)
             {
-                if (index + 1 >= group.Count) return new MException(this, "Invalid expression term '-'");
+                if (index + 1 >= group.Count) return new TException(this, "Invalid expression term '-'");
 
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
                 bool aExists = false;
                 if (index - 1 >= 0)
                 {
-                    MType a = MType.Parse(this, group[index - 1]);
-                    if (!(a is MException))
+                    TType a = TType.Parse(this, group[index - 1]);
+                    if (!(a is TException))
                     {
                         group[index] = "+";
                         aExists = true;
                     }
                 }
 
-                MNumber number = b as MNumber;
+                TNumber number = b as TNumber;
                 if (number == null)
                 {
-                    MException exception = new MException(this, "Failed to make value negative",
+                    TException exception = new TException(this, "Failed to make value negative",
                         "Values of type '" + b.TypeName + "' cannot be made negative");
-                    MVariable variable = b as MVariable;
+                    TVariable variable = b as TVariable;
                     if (variable == null) return exception;
 
-                    number = variable.Value as MNumber;
+                    number = variable.Value as TNumber;
                     if (number == null) return exception;
                 }
 
@@ -811,214 +819,214 @@ namespace MathsLanguage
                 else group[index + 1] = number.ToNegative();
             }
             
-            while ((index = group.IndexOf(MType.MODULUS_CHARACTER.ToString())) >= 0)
+            while ((index = group.IndexOf(TType.MODULUS_CHARACTER.ToString())) >= 0)
             {
-                MException exception = new MException(this, "Modulus brackets not closed", "another | required");
+                TException exception = new TException(this, "Modulus brackets not closed", "another | required");
                 if (index + 2 >= group.Count) return exception;
                 if (group[index + 2] is string)
                 {
-                    if ((string)group[index + 2] != MType.MODULUS_CHARACTER.ToString()) return exception;
+                    if ((string)group[index + 2] != TType.MODULUS_CHARACTER.ToString()) return exception;
                 }
                 else return exception;
 
-                MType value = MType.Parse(this, group[index + 1]);
-                if (value is MException) return value;
+                TType value = TType.Parse(this, group[index + 1]);
+                if (value is TException) return value;
 
-                MType result = Operations.Math.Modulus(this, value);
-                if (result == null) return new MException(this, "Modulus operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Modulus(this, value);
+                if (result == null) return new TException(this, "Modulus operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index] = result;
                 group.RemoveRange(index + 1, 2);
             }
 
             while ((index = group.IndexOf("^")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '^'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '^'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Pow(this, a, b);
-                if (result == null) return new MException(this, "Exponentiation operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Pow(this, a, b);
+                if (result == null) return new TException(this, "Exponentiation operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("/")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '/'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '/'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Divide(this, a, b);
-                if (result == null) return new MException(this, "Division operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Divide(this, a, b);
+                if (result == null) return new TException(this, "Division operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("*")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '*'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '*'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Multiply(this, a, b);
-                if (result == null) return new MException(this, "Multiplication operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Multiply(this, a, b);
+                if (result == null) return new TException(this, "Multiplication operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("+")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '+'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '+'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Add(this, a, b);
-                if (result == null) return new MException(this, "Addition operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Add(this, a, b);
+                if (result == null) return new TException(this, "Addition operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("=")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '='");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '='");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Equal(this, a, b, true);
-                if (result == null) return new MException(this, "Comparison operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Equal(this, a, b, true);
+                if (result == null) return new TException(this, "Comparison operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("~=")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '~='");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '~='");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Equal(this, a, b, false);
-                if (result is MException) return result;
+                TType result = Operations.Equal(this, a, b, false);
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("/=")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '/='");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '/='");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.NotEqual(this, a, b);
-                if (result == null) return new MException(this, "Comparison operation failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.NotEqual(this, a, b);
+                if (result == null) return new TException(this, "Comparison operation failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("<")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '<'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Inequality(this, a, b, "<");
-                if (result == null) return new MException(this, "Less than comparison failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Inequality(this, a, b, "<");
+                if (result == null) return new TException(this, "Less than comparison failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf(">")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '<'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Inequality(this, a, b, ">");
-                if (result == null) return new MException(this, "Greater than comparison failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Inequality(this, a, b, ">");
+                if (result == null) return new TException(this, "Greater than comparison failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("<=")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '<'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Inequality(this, a, b, "<=");
-                if (result == null) return new MException(this, "Less than or equal comparison failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Inequality(this, a, b, "<=");
+                if (result == null) return new TException(this, "Less than or equal comparison failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf(">=")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term '<'");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '<'");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MType result = Operations.Math.Inequality(this, a, b, ">=");
-                if (result == null) return new MException(this, "Greater than or equal comparison failed", "reason unknown");
-                if (result is MException) return result;
+                TType result = Operations.Math.Inequality(this, a, b, ">=");
+                if (result == null) return new TException(this, "Greater than or equal comparison failed", "reason unknown");
+                if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf(",")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term ','");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term ','");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MArgumentList argList = a as MArgumentList;
+                TArgumentList argList = a as TArgumentList;
                 if (argList == null)
                 {
-                    argList = new MArgumentList();
+                    argList = new TArgumentList();
                     argList.Add(a);
                     argList.Add(b);
                 }
@@ -1030,43 +1038,43 @@ namespace MathsLanguage
 
             while ((index = group.IndexOf("and")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term ','");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term ','");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MBoolean aBool = a as MBoolean;
-                if (aBool == null) return new MException(this, "Left hand side of expression must be a boolean value", "yes or no");
-                MBoolean bBool = b as MBoolean;
-                if (bBool == null) return new MException(this, "Right hand side of expression must be a boolean value", "yes or no");
+                TBoolean aBool = a as TBoolean;
+                if (aBool == null) return new TException(this, "Left hand side of expression must be a boolean value", "yes or no");
+                TBoolean bBool = b as TBoolean;
+                if (bBool == null) return new TException(this, "Right hand side of expression must be a boolean value", "yes or no");
 
-                group[index - 1] = new MBoolean(aBool.Value && bBool.Value);
+                group[index - 1] = new TBoolean(aBool.Value && bBool.Value);
                 group.RemoveRange(index, 2);
             }
 
             while ((index = group.IndexOf("or")) >= 0)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new MException(this, "Invalid expression term ','");
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term ','");
 
-                MType a = MType.Parse(this, group[index - 1]);
-                if (a is MException) return a;
-                MType b = MType.Parse(this, group[index + 1]);
-                if (b is MException) return b;
+                TType a = TType.Parse(this, group[index - 1]);
+                if (a is TException) return a;
+                TType b = TType.Parse(this, group[index + 1]);
+                if (b is TException) return b;
 
-                MBoolean aBool = a as MBoolean;
-                if (aBool == null) return new MException(this, "Left hand side of expression must be a boolean value", "yes or no");
-                MBoolean bBool = b as MBoolean;
-                if (bBool == null) return new MException(this, "Right hand side of expression must be a boolean value", "yes or no");
+                TBoolean aBool = a as TBoolean;
+                if (aBool == null) return new TException(this, "Left hand side of expression must be a boolean value", "yes or no");
+                TBoolean bBool = b as TBoolean;
+                if (bBool == null) return new TException(this, "Right hand side of expression must be a boolean value", "yes or no");
 
-                group[index - 1] = new MBoolean(aBool.Value || bBool.Value);
+                group[index - 1] = new TBoolean(aBool.Value || bBool.Value);
                 group.RemoveRange(index, 2);
             }
 
-            if (group.Count == 0) return MNil.Instance;
-            else if (group.Count == 1) return MType.Parse(this, group[0]);
-            else return new MException(this, "Statement could not be evaluated completely");
+            if (group.Count == 0) return TNil.Instance;
+            else if (group.Count == 1) return TType.Parse(this, group[0]);
+            else return new TException(this, "Statement could not be evaluated completely");
         }
 
     }

@@ -2,82 +2,85 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MathsLanguage.Types;
-using MathsLanguage.Types.Singletons;
+using Toast.Types;
+using Toast.Types.Singletons;
 
-namespace MathsLanguage
+namespace Toast
 {
-    class Operations
+    /// <summary>
+    /// A static class containing methods for evaluating expressions.
+    /// </summary>
+    static class Operations
     {
         /// <summary>
-        /// Attempts to find an MNumber value for the MType given. If there is no error, but the MNumber reference
-        /// given is still null after calling, then the MType is an MString (i.e. some arithmetic will work (+)).
+        /// Attempts to find an TNumber value for the TType given. If there is no error, but the TNumber reference
+        /// given is still null after calling, then the TType is an TString (i.e. some arithmetic will work (+)).
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="number">The MNumber reference to assign the result to.</param>
-        /// <param name="value">The MType to get an MNumber out of.</param>
+        /// <param name="number">The TNumber reference to assign the result to.</param>
+        /// <param name="value">The TType to get an TNumber out of.</param>
         /// <returns>An exception if there was an error, otherwise null.</returns>
-        private static MException AssignNumberValue(Interpreter interpreter, out MNumber number, MType value)
+        private static TException AssignNumberValue(Interpreter interpreter, out TNumber number, TType value)
         {
-            // Attempt to cast the MType 'value' argument to an MNumber. Failing that, check if it's an MString.
-            // If the value is an MNumber or an MString, return null (i.e. no exception). If it's an MVariable then
-            // work on the value of the MVariable, otherwise return an exception.
+            // Attempt to cast the TType 'value' argument to an TNumber. Failing that, check if it's an TString.
+            // If the value is an TNumber or an TString, return null (i.e. no exception). If it's an TVariable then
+            // work on the value of the TVariable, otherwise return an exception.
             
 
-            number = value as MNumber;
-            if ((number != null) || (value is MString)) return null;
+            number = value as TNumber;
+            if ((number != null) || (value is TString)) return null;
 
-            MVariable variable = value as MVariable;
+            TVariable variable = value as TVariable;
             if (variable != null)
             {
                 value = variable.Value;
-                number = value as MNumber;
-                if ((number != null) || (value is MString)) return null;
-                return new MException(interpreter, "Value of '" + variable.Identifier + "' is not a number",
+                number = value as TNumber;
+                if ((number != null) || (value is TString)) return null;
+                return new TException(interpreter, "Value of '" + variable.Identifier + "' is not a number",
                     "it is of type '" + value.TypeName + "'");
             }
 
-            return new MException(interpreter, "'" + value.ToCSString() + "' is not a number",
+            return new TException(interpreter, "'" + value.ToCSString() + "' is not a number",
                 "it is of type '" + value.TypeName + "'");
         }
 
         /// <summary>
-        /// A static class containing arithmetic methods for MNumbers.
+        /// A static class containing arithmetic methods for TNumbers.
         /// </summary>
-        public class Math
+        public static class Math
         {
             /// <summary>
-            /// Takes two MNumbers or two MStrings (or up to two MVariables containing MNumbers or MStrings) and
+            /// Takes two TNumbers or two TStrings (or up to two TVariables containing TNumbers or TStrings) and
             /// adds them together.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="a">The left hand operand of the operation.</param>
             /// <param name="b">The right hand operand of the operation.</param>
             /// <returns>
-            /// The MType resulting from the operation. An MExcpetion or null is returned when there is an error.
+            /// The TType resulting from the operation. An MExcpetion or null is returned when there is an error.
             /// </returns>
-            public static MType Add(Interpreter interpreter, MType a, MType b)
+            public static TType Add(Interpreter interpreter, TType a, TType b)
             {
-                // Convert arguments 'a' and 'b' into either an MNumber or an MString
-                MNumber numberA, numberB;
-                MString strA = null, strB = null;
+                // Convert arguments 'a' and 'b' into either an TNumber or an TString
+                TNumber numberA, numberB;
+                TString strA = null, strB = null;
 
-                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                TException exception = AssignNumberValue(interpreter, out numberA, a);
                 if (exception != null) return exception;
 
                 if (numberA == null)
                 {
-                    // No errors yet, and numberA is null, so argument 'a' could be an MString or an MVariable
-                    // containing an MString
-                    strA = a as MString;
+                    // No errors yet, and numberA is null, so argument 'a' could be an TString or an TVariable
+                    // containing an TString
+                    strA = a as TString;
                     if (strA == null)
                     {
-                        MVariable variable = a as MVariable;
-                        if (variable != null) strA = variable.Value as MString;
+                        TVariable variable = a as TVariable;
+                        if (variable != null) strA = variable.Value as TString;
                     }
                 }
-                if ((numberA == null) && (strA == null)) // Nothing useful, return an MException
-                    return new MException(interpreter, "Value is not a number or string");
+                if ((numberA == null) && (strA == null)) // Nothing useful, return an TException
+                    return new TException(interpreter, "Value is not a number or string");
 
 
                 // Same procedure for argument 'b'
@@ -85,56 +88,56 @@ namespace MathsLanguage
                 if (exception != null) return exception;
                 if (numberB == null)
                 {
-                    strB = b as MString;
+                    strB = b as TString;
                     if (strB == null)
                     {
-                        MVariable variable = b as MVariable;
-                        if (variable != null) strB = variable.Value as MString;
+                        TVariable variable = b as TVariable;
+                        if (variable != null) strB = variable.Value as TString;
                     }
                 }
                 if ((numberB == null) && (strB == null))
-                    return new MException(interpreter, "Value is not a number or string");
+                    return new TException(interpreter, "Value is not a number or string");
 
-                // Attempt addition if both operands are the same type, otherwise return an MException
+                // Attempt addition if both operands are the same type, otherwise return an TException
                 if ((numberB == null) && (strA == null))
-                    return new MException(interpreter, "Attempted addition of a string to a number");
+                    return new TException(interpreter, "Attempted addition of a string to a number");
                 else if ((numberA == null) && (strB == null))
-                    return new MException(interpreter, "Attempted addition of a number to a string");
+                    return new TException(interpreter, "Attempted addition of a number to a string");
                 else if ((numberA == null) && (numberB == null))
                 {
-                    return new MString(strA.Value + strB.Value);
+                    return new TString(strA.Value + strB.Value);
                 }
                 else
                 {
                     //The left hand operand decides the type of the returned value
                     switch (numberA.TypeName)
                     {
-                        case MType.M_INTEGER_TYPENAME:
+                        case TType.T_INTEGER_TYPENAME:
                             {
                                 // If the other operand is a fraction, treat this integer as a fraction (i.e. value/1)
-                                MFraction fraction = numberB as MFraction;
+                                TFraction fraction = numberB as TFraction;
                                 if (fraction != null)
                                 {
                                     // Copy the right hand fraction and add the left hand integer to it
-                                    fraction = new MFraction(fraction.Numerator, fraction.Denominator);
-                                    fraction.Add(numberA.MIntegerValue, 1);
+                                    fraction = new TFraction(fraction.Numerator, fraction.Denominator);
+                                    fraction.Add(numberA.TIntegerValue, 1);
                                     return fraction;
                                 }
-                                return new MInteger(numberA.MIntegerValue + numberB.MIntegerValue);
+                                return new TInteger(numberA.TIntegerValue + numberB.TIntegerValue);
                             }
 
-                        case MType.M_REAL_TYPENAME:
-                            return new MReal(numberA.MRealValue + numberB.MRealValue);
+                        case TType.T_REAL_TYPENAME:
+                            return new TReal(numberA.TRealValue + numberB.TRealValue);
 
-                        case MType.M_FRACTION_TYPENAME:
+                        case TType.T_FRACTION_TYPENAME:
                             {
                                 // Create a copy of the left hand fraction
-                                MFraction fraction = numberA as MFraction;
-                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                                TFraction fraction = numberA as TFraction;
+                                fraction = new TFraction(fraction.Numerator, fraction.Denominator);
 
                                 // Convert the right hand operand to a fraction
                                 long numerator, denominator;
-                                MFraction otherFraction = numberB as MFraction;
+                                TFraction otherFraction = numberB as TFraction;
                                 if (otherFraction != null) // If it's a fraction, simply copy the values
                                 {
                                     numerator = otherFraction.Numerator;
@@ -142,13 +145,13 @@ namespace MathsLanguage
                                 }
                                 else
                                 {
-                                    // Check if it's an MInteger first. It might not need to use DoubleToFraction
-                                    if (numberB is MInteger)
+                                    // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                    if (numberB is TInteger)
                                     {
-                                        numerator = numberB.MIntegerValue;
+                                        numerator = numberB.TIntegerValue;
                                         denominator = 1;
                                     }
-                                    else Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator,
+                                    else Operations.Misc.DoubleToFraction(numberB.TRealValue, out numerator,
                                         out denominator);
                                 }
 
@@ -162,55 +165,55 @@ namespace MathsLanguage
             }
 
             /// <summary>
-            /// Takes two MNumbers and subtracts one from the other.
+            /// Takes two TNumbers and subtracts one from the other.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="a">The left hand operand of the operation.</param>
             /// <param name="b">The right hand operand of the operation.</param>
             /// <returns>
-            /// The MType resulting from the operation. An MExcpetion or null is returned when there is an error.
+            /// The TType resulting from the operation. An MExcpetion or null is returned when there is an error.
             /// </returns>
-            public static MType Subtract(Interpreter interpreter, MType a, MType b)
+            public static TType Subtract(Interpreter interpreter, TType a, TType b)
             {
-                // Try to get MNumber values from the MType arguments
-                MNumber numberA, numberB;
-                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                // Try to get TNumber values from the TType arguments
+                TNumber numberA, numberB;
+                TException exception = AssignNumberValue(interpreter, out numberA, a);
                 if (exception != null) return exception;
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an MString; check them
+                // No errors, but one or both of the arguments could be an TString; check them
                 if ((numberA == null) || (numberB == null))
-                    return new MException(interpreter, "Strings cannot be used in subtraction operations");
+                    return new TException(interpreter, "Strings cannot be used in subtraction operations");
 
                 switch (numberA.TypeName)
                 {
-                    case MType.M_INTEGER_TYPENAME:
+                    case TType.T_INTEGER_TYPENAME:
                         {
                             // If the other operand is a fraction, treat this integer as a fraction (i.e. value/1)
-                            MFraction rhsFraction = numberB as MFraction;
+                            TFraction rhsFraction = numberB as TFraction;
                             if (rhsFraction != null)
                             {
                                 // Order of fractions matters in this case
-                                MFraction lhsFraction = new MFraction(numberA.MIntegerValue, 1);
+                                TFraction lhsFraction = new TFraction(numberA.TIntegerValue, 1);
                                 lhsFraction.Subtract(rhsFraction.Numerator, rhsFraction.Denominator);
                                 return lhsFraction;
                             }
-                            return new MInteger(numberA.MIntegerValue - numberB.MIntegerValue);
+                            return new TInteger(numberA.TIntegerValue - numberB.TIntegerValue);
                         }
 
-                    case MType.M_REAL_TYPENAME:
-                        return new MReal(numberA.MRealValue - numberB.MRealValue);
+                    case TType.T_REAL_TYPENAME:
+                        return new TReal(numberA.TRealValue - numberB.TRealValue);
 
-                    case MType.M_FRACTION_TYPENAME:
+                    case TType.T_FRACTION_TYPENAME:
                         {
                             // Create a copy of the left hand fraction
-                            MFraction fraction = numberA as MFraction;
-                            fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                            TFraction fraction = numberA as TFraction;
+                            fraction = new TFraction(fraction.Numerator, fraction.Denominator);
 
                             // Convert the right hand operand to a fraction
                             long numerator, denominator;
-                            MFraction otherFraction = numberB as MFraction;
+                            TFraction otherFraction = numberB as TFraction;
                             if (otherFraction != null) // If it's a fraction, simply copy the values
                             {
                                 numerator = otherFraction.Numerator;
@@ -218,13 +221,13 @@ namespace MathsLanguage
                             }
                             else
                             {
-                                // Check if it's an MInteger first. It might not need to use DoubleToFraction
-                                if (numberB is MInteger)
+                                // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                if (numberB is TInteger)
                                 {
-                                    numerator = numberB.MIntegerValue;
+                                    numerator = numberB.TIntegerValue;
                                     denominator = 1;
                                 }
-                                else Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator,
+                                else Operations.Misc.DoubleToFraction(numberB.TRealValue, out numerator,
                                     out denominator);
                             }
 
@@ -237,55 +240,55 @@ namespace MathsLanguage
             }
 
             /// <summary>
-            /// Takes two MNumbers and multiplies them together.
+            /// Takes two TNumbers and multiplies them together.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="a">The left hand operand of the operation.</param>
             /// <param name="b">The right hand operand of the operation.</param>
             /// <returns>
-            /// The MType resulting from the operation. An MExcpetion or null is returned when there is an error.
+            /// The TType resulting from the operation. An MExcpetion or null is returned when there is an error.
             /// </returns>
-            public static MType Multiply(Interpreter interpreter, MType a, MType b)
+            public static TType Multiply(Interpreter interpreter, TType a, TType b)
             {
-                // Try to get MNumber values from the MType arguments
-                MNumber numberA, numberB;
-                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                // Try to get TNumber values from the TType arguments
+                TNumber numberA, numberB;
+                TException exception = AssignNumberValue(interpreter, out numberA, a);
                 if (exception != null) return exception;
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an MString; check them
+                // No errors, but one or both of the arguments could be an TString; check them
                 if ((numberA == null) || (numberB == null))
-                    return new MException(interpreter, "Strings cannot be used in multiplication operations");
+                    return new TException(interpreter, "Strings cannot be used in multiplication operations");
 
                 switch (numberA.TypeName)
                 {
-                    case MType.M_INTEGER_TYPENAME:
+                    case TType.T_INTEGER_TYPENAME:
                         {
                             // If the other operand is a fraction, treat this integer as a fraction (i.e. value/1)
-                            MFraction fraction = numberB as MFraction;
+                            TFraction fraction = numberB as TFraction;
                             if (fraction != null)
                             {
                                 // Copy the right hand fraction and multiply it by the left hand integer
-                                fraction = new MFraction(fraction.Numerator, fraction.Denominator);
-                                fraction.Multiply(numberA.MIntegerValue, 1);
+                                fraction = new TFraction(fraction.Numerator, fraction.Denominator);
+                                fraction.Multiply(numberA.TIntegerValue, 1);
                                 return fraction;
                             }
-                            return new MInteger(numberA.MIntegerValue * numberB.MIntegerValue);
+                            return new TInteger(numberA.TIntegerValue * numberB.TIntegerValue);
                         }
 
-                    case MType.M_REAL_TYPENAME:
-                        return new MReal(numberA.MRealValue * numberB.MRealValue);
+                    case TType.T_REAL_TYPENAME:
+                        return new TReal(numberA.TRealValue * numberB.TRealValue);
 
-                    case MType.M_FRACTION_TYPENAME:
+                    case TType.T_FRACTION_TYPENAME:
                         {
                             // Create a copy of the left hand fraction
-                            MFraction fraction = numberA as MFraction;
-                            fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                            TFraction fraction = numberA as TFraction;
+                            fraction = new TFraction(fraction.Numerator, fraction.Denominator);
 
                             // Convert the right hand operand to a fraction
                             long numerator, denominator;
-                            MFraction otherFraction = numberB as MFraction;
+                            TFraction otherFraction = numberB as TFraction;
                             if (otherFraction != null) // If it's a fraction, simply copy the values
                             {
                                 numerator = otherFraction.Numerator;
@@ -293,13 +296,13 @@ namespace MathsLanguage
                             }
                             else
                             {
-                                // Check if it's an MInteger first. It might not need to use DoubleToFraction
-                                if (numberB is MInteger)
+                                // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                if (numberB is TInteger)
                                 {
-                                    numerator = numberB.MIntegerValue;
+                                    numerator = numberB.TIntegerValue;
                                     denominator = 1;
                                 }
-                                else Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator,
+                                else Operations.Misc.DoubleToFraction(numberB.TRealValue, out numerator,
                                     out denominator);
                             }
 
@@ -312,57 +315,57 @@ namespace MathsLanguage
             }
 
             /// <summary>
-            /// Takes two MNumbers and divides one by the other.
+            /// Takes two TNumbers and divides one by the other.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="a">The left hand operand of the operation.</param>
             /// <param name="b">The right hand operand of the operation.</param>
             /// <returns>
-            /// The MType resulting from the operation. An MExcpetion or null is returned when there is an error.
+            /// The TType resulting from the operation. An MExcpetion or null is returned when there is an error.
             /// </returns>
-            public static MType Divide(Interpreter interpreter, MType a, MType b)
+            public static TType Divide(Interpreter interpreter, TType a, TType b)
             {
-                // Try to get MNumber values from the MType arguments
-                MNumber numberA, numberB;
-                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                // Try to get TNumber values from the TType arguments
+                TNumber numberA, numberB;
+                TException exception = AssignNumberValue(interpreter, out numberA, a);
                 if (exception != null) return exception;
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an MString; check them
+                // No errors, but one or both of the arguments could be an TString; check them
                 if ((numberA == null) || (numberB == null))
-                    return new MException(interpreter, "Strings cannot be used in division operations");
+                    return new TException(interpreter, "Strings cannot be used in division operations");
 
                 switch (numberA.TypeName)
                 {
-                    case MType.M_INTEGER_TYPENAME:
+                    case TType.T_INTEGER_TYPENAME:
                         {
                             // If the other operand is a fraction, treat this integer as a fraction (i.e. value/1)
-                            MFraction rhsFraction = numberB as MFraction;
+                            TFraction rhsFraction = numberB as TFraction;
                             if (rhsFraction != null)
                             {
                                 // Order of fractions matters in this case
-                                MFraction lhsFraction = new MFraction(numberA.MIntegerValue, 1);
+                                TFraction lhsFraction = new TFraction(numberA.TIntegerValue, 1);
                                 lhsFraction.Divide(rhsFraction.Numerator, rhsFraction.Denominator);
                                 return lhsFraction;
                             }
-                            if (numberB.TypeName == MType.M_INTEGER_TYPENAME)
-                                return new MFraction(numberA.MIntegerValue, numberB.MIntegerValue);
-                            return new MInteger(numberA.MIntegerValue / numberB.MIntegerValue);
+                            if (numberB.TypeName == TType.T_INTEGER_TYPENAME)
+                                return new TFraction(numberA.TIntegerValue, numberB.TIntegerValue);
+                            return new TInteger(numberA.TIntegerValue / numberB.TIntegerValue);
                         }
 
-                    case MType.M_REAL_TYPENAME:
-                        return new MReal(numberA.MRealValue / numberB.MRealValue);
+                    case TType.T_REAL_TYPENAME:
+                        return new TReal(numberA.TRealValue / numberB.TRealValue);
 
-                    case MType.M_FRACTION_TYPENAME:
+                    case TType.T_FRACTION_TYPENAME:
                         {
                             // Create a copy of the left hand fraction
-                            MFraction fraction = numberA as MFraction;
-                            fraction = new MFraction(fraction.Numerator, fraction.Denominator);
+                            TFraction fraction = numberA as TFraction;
+                            fraction = new TFraction(fraction.Numerator, fraction.Denominator);
 
                             // Convert the right hand operand to a fraction
                             long numerator, denominator;
-                            MFraction otherFraction = numberB as MFraction;
+                            TFraction otherFraction = numberB as TFraction;
                             if (otherFraction != null) // If it's a fraction, simply copy the values
                             {
                                 numerator = otherFraction.Numerator;
@@ -370,13 +373,13 @@ namespace MathsLanguage
                             }
                             else
                             {
-                                // Check if it's an MInteger first. It might not need to use DoubleToFraction
-                                if (numberB is MInteger)
+                                // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                if (numberB is TInteger)
                                 {
-                                    numerator = numberB.MIntegerValue;
+                                    numerator = numberB.TIntegerValue;
                                     denominator = 1;
                                 }
-                                else Operations.Misc.DoubleToFraction(numberB.MRealValue, out numerator,
+                                else Operations.Misc.DoubleToFraction(numberB.TRealValue, out numerator,
                                     out denominator);
                             }
 
@@ -389,217 +392,218 @@ namespace MathsLanguage
             }
 
             /// <summary>
-            /// Takes two MNumbers and returns the first one to the power of the other.
+            /// Takes two TNumbers and returns the first one to the power of the other.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="a">The left hand operand of the operation.</param>
             /// <param name="b">The right hand operand of the operation.</param>
             /// <returns>
-            /// The MType resulting from the operation. An MExcpetion or null is returned when there is an error.
+            /// The TType resulting from the operation. An MExcpetion or null is returned when there is an error.
             /// </returns>
-            public static MType Pow(Interpreter interpreter, MType a, MType b)
+            public static TType Pow(Interpreter interpreter, TType a, TType b)
             {
-                // Try to get MNumber values from the MType arguments
-                MNumber numberA, numberB;
-                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                // Try to get TNumber values from the TType arguments
+                TNumber numberA, numberB;
+                TException exception = AssignNumberValue(interpreter, out numberA, a);
                 if (exception != null) return exception;
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an MString; check them
+                // No errors, but one or both of the arguments could be an TString; check them
                 if ((numberA == null) || (numberB == null))
-                    return new MException(interpreter, "Strings cannot be used in exponentiation operations");
+                    return new TException(interpreter, "Strings cannot be used in exponentiation operations");
 
                 switch (numberA.TypeName)
                 {
-                    case MType.M_INTEGER_TYPENAME:
-                        return new MInteger(
-                            (long)System.Math.Round(System.Math.Pow(numberA.MRealValue, numberB.MRealValue)));
+                    case TType.T_INTEGER_TYPENAME:
+                        return new TInteger(
+                            (long)System.Math.Round(System.Math.Pow(numberA.TRealValue, numberB.TRealValue)));
 
-                    case MType.M_REAL_TYPENAME:
-                        return new MReal(System.Math.Pow(numberA.MRealValue, numberB.MRealValue));
+                    case TType.T_REAL_TYPENAME:
+                        return new TReal(System.Math.Pow(numberA.TRealValue, numberB.TRealValue));
 
-                    case MType.M_FRACTION_TYPENAME:
-                        MFraction fraction = numberA as MFraction;
+                    case TType.T_FRACTION_TYPENAME:
+                        TFraction fraction = numberA as TFraction;
                         long numerator =
-                            (long)System.Math.Round(System.Math.Pow(fraction.Numerator, numberB.MRealValue));
+                            (long)System.Math.Round(System.Math.Pow(fraction.Numerator, numberB.TRealValue));
                         long denominator =
-                            (long)System.Math.Round(System.Math.Pow(fraction.Denominator, numberB.MRealValue));
-                        return new MFraction(numerator, denominator);
+                            (long)System.Math.Round(System.Math.Pow(fraction.Denominator, numberB.TRealValue));
+                        return new TFraction(numerator, denominator);
                 }
 
                 return null;
             }
 
             /// <summary>
-            /// Takes an MNumber and returns its absolute value.
+            /// Takes an TNumber and returns its absolute value.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
-            /// <param name="value">The MNumber to get the absolute value of.</param>
+            /// <param name="value">The TNumber to get the absolute value of.</param>
             /// <returns>
-            /// The MType resulting from the operation. An MExcpetion or null is returned when there is an error.
+            /// The TType resulting from the operation. An MExcpetion or null is returned when there is an error.
             /// </returns>
-            public static MType Modulus(Interpreter interpreter, MType value)
+            public static TType Modulus(Interpreter interpreter, TType value)
             {
-                MNumber number;
-                MException exception = AssignNumberValue(interpreter, out number, value);
+                TNumber number;
+                TException exception = AssignNumberValue(interpreter, out number, value);
                 if (exception != null) return exception;
 
                 // No errors yet, but make sure it's not a string
-                if (number == null) return new MException(interpreter, "Strings cannot be used in modulus operations");
+                if (number == null) return new TException(interpreter, "Strings cannot be used in modulus operations");
 
                 switch (number.TypeName)
                 {
-                    case MType.M_INTEGER_TYPENAME:
-                        return new MInteger(System.Math.Abs(number.MIntegerValue));
-                    case MType.M_REAL_TYPENAME:
-                        return new MReal(System.Math.Abs(number.MRealValue));
-                    case MType.M_FRACTION_TYPENAME:
-                        MFraction fraction = number as MFraction;
-                        return new MFraction(System.Math.Abs(fraction.Numerator), fraction.Denominator);
-                        // No need to abs denominator as MFraction denominators are automatically kept positive
+                    case TType.T_INTEGER_TYPENAME:
+                        return new TInteger(System.Math.Abs(number.TIntegerValue));
+                    case TType.T_REAL_TYPENAME:
+                        return new TReal(System.Math.Abs(number.TRealValue));
+                    case TType.T_FRACTION_TYPENAME:
+                        TFraction fraction = number as TFraction;
+                        return new TFraction(System.Math.Abs(fraction.Numerator), fraction.Denominator);
+                        // No need to abs denominator as TFraction denominators are automatically kept positive
                 }
 
                 return null;
             }
 
             /// <summary>
-            /// Compares one MNumber with another based on a given inequality operator.
+            /// Compares one TNumber with another based on a given inequality operator.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="a">The left hand operand of the comparison.</param>
             /// <param name="b">The right hand operand of the comparison.</param>
             /// <param name="inequality">The inequality operator to use in the comparison.</param>
             /// <returns>
-            /// An MBoolean containing the result of the comparison. Returns an MException when there is an error.
+            /// An TBoolean containing the result of the comparison. Returns an TException when there is an error.
             /// </returns>
-            public static MType Inequality(Interpreter interpreter, MType a, MType b, string inequality)
+            public static TType Inequality(Interpreter interpreter, TType a, TType b, string inequality)
             {
-                // Try to get MNumber values from the MType arguments
-                MNumber numberA, numberB;
-                MException exception = AssignNumberValue(interpreter, out numberA, a);
+                // Try to get TNumber values from the TType arguments
+                TNumber numberA, numberB;
+                TException exception = AssignNumberValue(interpreter, out numberA, a);
                 if (exception != null) return exception;
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an MString; check them
+                // No errors, but one or both of the arguments could be an TString; check them
                 if ((numberA == null) || (numberB == null))
-                    return new MException(interpreter, "Strings cannot be used in inequality comparisons");
+                    return new TException(interpreter, "Strings cannot be used in inequality comparisons");
 
                 bool result;
                 switch (inequality)
                 {
                     case ">":
-                        result = numberA.MRealValue > numberB.MRealValue;
+                        result = numberA.TRealValue > numberB.TRealValue;
                         break;
                     case ">=":
-                        result = numberA.MRealValue >= numberB.MRealValue;
+                        result = numberA.TRealValue >= numberB.TRealValue;
                         break;
                     case "<":
-                        result = numberA.MRealValue < numberB.MRealValue;
+                        result = numberA.TRealValue < numberB.TRealValue;
                         break;
                     case "<=":
-                        result = numberA.MRealValue <= numberB.MRealValue;
+                        result = numberA.TRealValue <= numberB.TRealValue;
                         break;
                     default:
-                        return new MException(interpreter, "Invalid inequality operator given");
+                        return new TException(interpreter, "Invalid inequality operator given");
                 }
 
-                return new MBoolean(result);
+                return new TBoolean(result);
             }
         }
 
         /// <summary>
-        /// Does an equality comparison of one MType with another.
+        /// Does an equality comparison of one TType with another.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
         /// <param name="a">The left hand operand of the comparison.</param>
         /// <param name="b">The right hand operand of the comparison.</param>
         /// <param name="strict">
         /// Whether the equality should be approximate or not. Give true for exact equality comparisons, and false for
-        /// approximate equality comparisons of MNumbers.
+        /// approximate equality comparisons of TNumbers.
         /// </param>
         /// <returns>
-        /// An MBoolean containing the result of the comparison. Returns an MException or null when there is an error.
+        /// An TBoolean containing the result of the comparison. Returns an TException or null when there is an error.
         /// </returns>
-        public static MType Equal(Interpreter interpreter, MType a, MType b, bool strict)
+        public static TType Equal(Interpreter interpreter, TType a, TType b, bool strict)
         {
-            // If arguments are MVariable, get their value. The values of the MVariable need to be compared,
-            // not the MVariable objects themselves
-            MVariable variable = a as MVariable;
+            // If arguments are TVariable, get their value. The values of the TVariable need to be compared,
+            // not the TVariable objects themselves
+            TVariable variable = a as TVariable;
             if (variable != null) a = variable.Value;
-            variable = b as MVariable;
+            variable = b as TVariable;
             if (variable != null) b = variable.Value;
 
-            // Make sure that each operand is of the same type. MNumbers are an exception; any MNumber derivative can
-            // be compared with any other MNumber derivative
-            if ((a.TypeName != b.TypeName) && !((a is MNumber) && (b is MNumber)))
-                return new MException(interpreter,
+            // Make sure that each operand is of the same type. TNumbers are an exception; any TNumber derivative can
+            // be compared with any other TNumber derivative
+            if ((a.TypeName != b.TypeName) && !((a is TNumber) && (b is TNumber)))
+                return new TException(interpreter,
                     "Type '" + a.TypeName + "' cannot be compared with type '" + b.TypeName + "'");
 
             // Using 'as' syntax instead of '()' for casting, because it looks cleaner. The result of the 'as' will not
-            // return null because we've done the necessary check beforehand (i.e. if 'a' is an MNumber, then 'b' must
-            // also be an MNumber)
-            if (a is MNumber)
+            // return null because we've done the necessary check beforehand (i.e. if 'a' is an TNumber, then 'b' must
+            // also be an TNumber)
+            if (a is TNumber)
             {
                 bool result;
-                if (strict) result = ((a as MNumber).MRealValue == (b as MNumber).MRealValue);
-                else result = ((a as MNumber).MIntegerValue == (b as MNumber).MIntegerValue);
+                if (strict) result = ((a as TNumber).TRealValue == (b as TNumber).TRealValue);
+                else result = ((a as TNumber).TIntegerValue == (b as TNumber).TIntegerValue);
 
-                return new MBoolean(result);
+                return new TBoolean(result);
             }
-            else if (a is MBoolean)
+            else if (a is TBoolean)
             {
-                return new MBoolean((a as MBoolean).Value == (b as MBoolean).Value);
+                return new TBoolean((a as TBoolean).Value == (b as TBoolean).Value);
             }
-            else if (a is MString) {
-                return new MBoolean((a as MString).Value == (b as MString).Value);
+            else if (a is TString) {
+                return new TBoolean((a as TString).Value == (b as TString).Value);
             }
-            else if (a is MVariable) // i.e. if argument 'a' is a reference
+            else if (a is TVariable) // i.e. if argument 'a' is a reference
             {
-                return new MBoolean(a == b);
+                return new TBoolean(a == b);
             }
-            else if (a is MFunction)
+            else if (a is TFunction)
             {
-                MFunction funcA = a as MFunction, funcB = b as MFunction;
-                return new MBoolean(
+                TFunction funcA = a as TFunction, funcB = b as TFunction;
+                return new TBoolean(
                     (funcA.HardCodedFunction == funcB.HardCodedFunction) &&
                     (funcA.CustomFunction == funcB.CustomFunction) &&
                     (funcA.Block == funcB.Block));
             }
-            else if (a is MNil)
+            else if (a is TNil)
             {
-                return new MBoolean(b is MNil);
+                return new TBoolean(b is TNil);
             }
 
             return null;
         }
 
         /// <summary>
-        /// Does a 'not equal to' inequality comparison of one MType with another. Always does a strict comparison,
+        /// Does a 'not equal to' inequality comparison of one TType with another. Always does a strict comparison,
         /// unlike the Operations.Equal method where strictness can be specified.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
         /// <param name="a">The left hand operand of the comparison.</param>
         /// <param name="b">The right hand operand of the comparison.</param>
         /// <returns>
-        /// An MBoolean containing the result of the comparison. Returns an MException or null when there is an error.
+        /// An TBoolean containing the result of the comparison. Returns an TException or null when there is an error.
         /// </returns>
-        public static MType NotEqual(Interpreter interpreter, MType a, MType b)
+        public static TType NotEqual(Interpreter interpreter, TType a, TType b)
         {
-            // Do an equality comparison of the arguments, and return the result if it's an MException or null.
-            // If the result is an MBoolean then invert its value
-            MType value = Equal(interpreter, a, b, true);
-            MBoolean result = value as MBoolean;
+            // Do an equality comparison of the arguments, and return the result if it's an TException or null.
+            // If the result is an TBoolean then invert its value
+            TType value = Equal(interpreter, a, b, true);
+            TBoolean result = value as TBoolean;
             if (result == null) return value;
             result.Value = !result.Value;
             return result;
         }
 
         /// <summary>
-        /// Methods that are for general use in the program and not necessarily for use with MTypes.
+        /// A static class containing methods that are for general use in the program and not necessarily for use with
+        /// TTypes.
         /// </summary>
-        public class Misc
+        public static class Misc
         {
             /// <summary>
             /// Converts a floating point value into a fraction.
