@@ -13,17 +13,17 @@ namespace Toast
     static class Operations
     {
         /// <summary>
-        /// Attempts to find an TNumber value for the TType given. If there is no error, but the TNumber reference
-        /// given is still null after calling, then the TType is an TString (i.e. some arithmetic will work (+)).
+        /// Attempts to find a TNumber value for the TType given. If there is no error, but the TNumber reference
+        /// given is still null after calling, then the TType is a TString (i.e. some arithmetic will work (+)).
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
         /// <param name="number">The TNumber reference to assign the result to.</param>
-        /// <param name="value">The TType to get an TNumber out of.</param>
+        /// <param name="value">The TType to get a TNumber out of.</param>
         /// <returns>An exception if there was an error, otherwise null.</returns>
         private static TException AssignNumberValue(Interpreter interpreter, out TNumber number, TType value)
         {
-            // Attempt to cast the TType 'value' argument to an TNumber. Failing that, check if it's an TString.
-            // If the value is an TNumber or an TString, return null (i.e. no exception). If it's an TVariable then
+            // Attempt to cast the TType 'value' argument to a TNumber. Failing that, check if it's a TString.
+            // If the value is a TNumber or a TString, return null (i.e. no exception). If it's a TVariable then
             // work on the value of the TVariable, otherwise return an exception.
             
 
@@ -61,7 +61,7 @@ namespace Toast
             /// </returns>
             public static TType Add(Interpreter interpreter, TType a, TType b)
             {
-                // Convert arguments 'a' and 'b' into either an TNumber or an TString
+                // Convert arguments 'a' and 'b' into either a TNumber or a TString
                 TNumber numberA, numberB;
                 TString strA = null, strB = null;
 
@@ -70,8 +70,8 @@ namespace Toast
 
                 if (numberA == null)
                 {
-                    // No errors yet, and numberA is null, so argument 'a' could be an TString or an TVariable
-                    // containing an TString
+                    // No errors yet, and numberA is null, so argument 'a' could be a TString or a TVariable
+                    // containing a TString
                     strA = a as TString;
                     if (strA == null)
                     {
@@ -79,7 +79,7 @@ namespace Toast
                         if (variable != null) strA = variable.Value as TString;
                     }
                 }
-                if ((numberA == null) && (strA == null)) // Nothing useful, return an TException
+                if ((numberA == null) && (strA == null)) // Nothing useful, return a TException
                     return new TException(interpreter, "Value is not a number or string");
 
 
@@ -98,7 +98,7 @@ namespace Toast
                 if ((numberB == null) && (strB == null))
                     return new TException(interpreter, "Value is not a number or string");
 
-                // Attempt addition if both operands are the same type, otherwise return an TException
+                // Attempt addition if both operands are the same type, otherwise return a TException
                 if ((numberB == null) && (strA == null))
                     return new TException(interpreter, "Attempted addition of a string to a number");
                 else if ((numberA == null) && (strB == null))
@@ -145,7 +145,7 @@ namespace Toast
                                 }
                                 else
                                 {
-                                    // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                    // Check if it's a TInteger first. It might not need to use DoubleToFraction
                                     if (numberB is TInteger)
                                     {
                                         numerator = numberB.TIntegerValue;
@@ -182,7 +182,7 @@ namespace Toast
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an TString; check them
+                // No errors, but one or both of the arguments could be a TString; check them
                 if ((numberA == null) || (numberB == null))
                     return new TException(interpreter, "Strings cannot be used in subtraction operations");
 
@@ -221,7 +221,7 @@ namespace Toast
                             }
                             else
                             {
-                                // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                // Check if it's a TInteger first. It might not need to use DoubleToFraction
                                 if (numberB is TInteger)
                                 {
                                     numerator = numberB.TIntegerValue;
@@ -257,7 +257,7 @@ namespace Toast
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an TString; check them
+                // No errors, but one or both of the arguments could be a TString; check them
                 if ((numberA == null) || (numberB == null))
                     return new TException(interpreter, "Strings cannot be used in multiplication operations");
 
@@ -296,7 +296,7 @@ namespace Toast
                             }
                             else
                             {
-                                // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                // Check if it's a TInteger first. It might not need to use DoubleToFraction
                                 if (numberB is TInteger)
                                 {
                                     numerator = numberB.TIntegerValue;
@@ -332,7 +332,7 @@ namespace Toast
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an TString; check them
+                // No errors, but one or both of the arguments could be a TString; check them
                 if ((numberA == null) || (numberB == null))
                     return new TException(interpreter, "Strings cannot be used in division operations");
 
@@ -373,7 +373,7 @@ namespace Toast
                             }
                             else
                             {
-                                // Check if it's an TInteger first. It might not need to use DoubleToFraction
+                                // Check if it's a TInteger first. It might not need to use DoubleToFraction
                                 if (numberB is TInteger)
                                 {
                                     numerator = numberB.TIntegerValue;
@@ -409,7 +409,7 @@ namespace Toast
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an TString; check them
+                // No errors, but one or both of the arguments could be a TString; check them
                 if ((numberA == null) || (numberB == null))
                     return new TException(interpreter, "Strings cannot be used in exponentiation operations");
 
@@ -435,7 +435,7 @@ namespace Toast
             }
 
             /// <summary>
-            /// Takes an TNumber and returns its absolute value.
+            /// Takes a TNumber and returns its absolute value.
             /// </summary>
             /// <param name="interpreter">The interpreter that the method is being called from.</param>
             /// <param name="value">The TNumber to get the absolute value of.</param>
@@ -474,7 +474,7 @@ namespace Toast
             /// <param name="b">The right hand operand of the comparison.</param>
             /// <param name="inequality">The inequality operator to use in the comparison.</param>
             /// <returns>
-            /// An TBoolean containing the result of the comparison. Returns an TException when there is an error.
+            /// An TBoolean containing the result of the comparison. Returns a TException when there is an error.
             /// </returns>
             public static TType Inequality(Interpreter interpreter, TType a, TType b, string inequality)
             {
@@ -485,7 +485,7 @@ namespace Toast
                 exception = AssignNumberValue(interpreter, out numberB, b);
                 if (exception != null) return exception;
 
-                // No errors, but one or both of the arguments could be an TString; check them
+                // No errors, but one or both of the arguments could be a TString; check them
                 if ((numberA == null) || (numberB == null))
                     return new TException(interpreter, "Strings cannot be used in inequality comparisons");
 
@@ -523,7 +523,7 @@ namespace Toast
         /// approximate equality comparisons of TNumbers.
         /// </param>
         /// <returns>
-        /// An TBoolean containing the result of the comparison. Returns an TException or null when there is an error.
+        /// An TBoolean containing the result of the comparison. Returns a TException or null when there is an error.
         /// </returns>
         public static TType Equal(Interpreter interpreter, TType a, TType b, bool strict)
         {
@@ -541,8 +541,8 @@ namespace Toast
                     "Type '" + a.TypeName + "' cannot be compared with type '" + b.TypeName + "'");
 
             // Using 'as' syntax instead of '()' for casting, because it looks cleaner. The result of the 'as' will not
-            // return null because we've done the necessary check beforehand (i.e. if 'a' is an TNumber, then 'b' must
-            // also be an TNumber)
+            // return null because we've done the necessary check beforehand (i.e. if 'a' is a TNumber, then 'b' must
+            // also be a TNumber)
             if (a is TNumber)
             {
                 bool result;
@@ -586,12 +586,12 @@ namespace Toast
         /// <param name="a">The left hand operand of the comparison.</param>
         /// <param name="b">The right hand operand of the comparison.</param>
         /// <returns>
-        /// An TBoolean containing the result of the comparison. Returns an TException or null when there is an error.
+        /// An TBoolean containing the result of the comparison. Returns a TException or null when there is an error.
         /// </returns>
         public static TType NotEqual(Interpreter interpreter, TType a, TType b)
         {
-            // Do an equality comparison of the arguments, and return the result if it's an TException or null.
-            // If the result is an TBoolean then invert its value
+            // Do an equality comparison of the arguments, and return the result if it's a TException or null.
+            // If the result is a TBoolean then invert its value
             TType value = Equal(interpreter, a, b, true);
             TBoolean result = value as TBoolean;
             if (result == null) return value;

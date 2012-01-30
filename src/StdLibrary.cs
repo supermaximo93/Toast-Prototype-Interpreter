@@ -34,7 +34,7 @@ namespace Toast
         }
 
         /// <summary>
-        /// Searches for an TFunction with a specified name.
+        /// Searches for a TFunction with a specified name.
         /// </summary>
         /// <param name="functionName">The identifier of the function to search for.</param>
         /// <returns>The TFunction being searched for. Returns null if the function could not be found.</returns>
@@ -47,10 +47,10 @@ namespace Toast
        
         /// <summary>
         /// The method that represents the 'load' function in the language.
-        /// Loads a script file with the specified file name (given by an TString) and runs it.
+        /// Loads a script file with the specified file name (given by a TString) and runs it.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="args">The arguments being passed to the function as an TArgumentList.</param>
+        /// <param name="args">The arguments being passed to the function as a TArgumentList.</param>
         /// <returns>TNil</returns>
         public static TType Load(Interpreter interpreter, TArgumentList args)
         {
@@ -66,7 +66,7 @@ namespace Toast
         /// Takes any number of values and writes their string values.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="args">The arguments being passed to the function as an TArgumentList.</param>
+        /// <param name="args">The arguments being passed to the function as a TArgumentList.</param>
         /// <returns>TNil</returns>
         public static TType Print(Interpreter interpreter, TArgumentList args)
         {
@@ -87,27 +87,27 @@ namespace Toast
         /// <summary>
         /// The method that represents the 'read' function in the language.
         /// Reads in a string and converts it into the most suitable TType.
-        /// If the string cannot be converted, it just returns the string as an TString.
+        /// If the string cannot be converted, it just returns the string as a TString.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="args">The arguments being passed to the function as an TArgumentList.</param>
+        /// <param name="args">The arguments being passed to the function as a TArgumentList.</param>
         /// <returns>An TType of the type that the entered string represents best.</returns>
         public static TType Read(Interpreter interpreter, TArgumentList args)
         {
             // Read in a string and convert it to a suitable TType with TType.Parse.
             string str = System.Console.ReadLine();
             TType value = TType.Parse(interpreter, str);
-            if (value is TException) value = new TString(str); // If the string can't be parsed, return it as an TString
+            if (value is TException) value = new TString(str); // If the string can't be parsed, return it as a TString
             return value;
         }
         public const string READ_NAME = "read";
 
         /// <summary>
         /// The method that represents the 'read_string' function in the language.
-        /// Reads in a string returns it as an TString.
+        /// Reads in a string returns it as a TString.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="args">The arguments being passed to the function as an TArgumentList.</param>
+        /// <param name="args">The arguments being passed to the function as a TArgumentList.</param>
         /// <returns>An TString representing the string that was entered.</returns>
         public static TType ReadString(Interpreter interpreter, TArgumentList args)
         {
@@ -120,7 +120,7 @@ namespace Toast
         /// Exits from the current function, returning any value passed to the function.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="args">The arguments being passed to the function as an TArgumentList.</param>
+        /// <param name="args">The arguments being passed to the function as a TArgumentList.</param>
         /// <returns>The argument passed to the function. If no arguments were passed, it returns TNil.</returns>
         public static TType Exit(Interpreter interpreter, TArgumentList args)
         {
@@ -142,7 +142,7 @@ namespace Toast
         /// Generates a random TInteger between 0 and the given value - 1.
         /// </summary>
         /// <param name="interpreter">The interpreter that the method is being called from.</param>
-        /// <param name="args">The arguments being passed to the function as an TArgumentList.</param>
+        /// <param name="args">The arguments being passed to the function as a TArgumentList.</param>
         /// <returns>An TInteger with a value between 0 and the given value - 1</returns>
         public static TType Random(Interpreter interpreter, TArgumentList args)
         {
