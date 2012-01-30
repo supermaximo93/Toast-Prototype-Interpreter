@@ -85,7 +85,7 @@ namespace Toast
             currentBlock = null;
             file = null;
 
-            System.Console.WriteLine("Toast Interpreter version 0.1 by Max Foster\n");
+            System.Console.WriteLine("Toast Interpreter prototype by Max Foster\n");
         }
 
         public void Run(string fileName)
