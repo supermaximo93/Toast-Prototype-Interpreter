@@ -5,53 +5,51 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType/TNumber representing an integer, stored as a long.
+    /// </summary>
     class TInteger : TNumber
     {
-        private long value;
-        public long Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public long Value { get; set; }
 
         public TInteger()
         {
-            value = 0;
+            Value = 0;
         }
 
         public TInteger(long initialValue)
         {
-            value = initialValue;
+            Value = initialValue;
         }
 
         public override string TypeName { get { return T_INTEGER_TYPENAME; } }
 
         public override string ToCSString()
         {
-            return value.ToString();
+            return Value.ToString();
         }
 
         public override TInteger ToTInteger()
         {
-            return new TInteger(value);
+            return new TInteger(Value);
         }
 
         public override TReal ToTReal()
         {
-            return new TReal((double)value);
+            return new TReal((double)Value);
         }
 
         public override TFraction ToTFraction()
         {
-            return new TFraction(value, 1);
+            return new TFraction(Value, 1);
         }
 
-        public override long TIntegerValue { get { return value; } }
-        public override double TRealValue { get { return (double)value; } }
+        public override long TIntegerValue { get { return Value; } }
+        public override double TRealValue { get { return (double)Value; } }
 
         public override TNumber ToNegative()
         {
-            return new TInteger(-value);
+            return new TInteger(-Value);
         }
     }
 }

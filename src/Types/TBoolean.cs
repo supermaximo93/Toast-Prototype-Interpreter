@@ -5,37 +5,41 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType representing a boolean value, stored as a bool.
+    /// </summary>
     class TBoolean : TType
     {
-        private bool value;
-        public bool Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public bool Value { get; set; }
 
         public TBoolean()
         {
-            value = false;
+            Value = false;
         }
 
         public TBoolean(bool value)
         {
-            this.value = value;
+            Value = value;
         }
 
         public TBoolean(string value)
         {
-            this.value = (value.ToLower() == "yes");
+            Value = (value.ToLower() == "yes");
         }
 
         public override string TypeName { get { return T_BOOLEAN_TYPENAME; } }
 
         public override string ToCSString()
         {
-            return value ? "yes" : "no";
+            return Value ? "yes" : "no";
         }
 
+        /// <summary>
+        /// Attempts to convert the given string to a bool.
+        /// </summary>
+        /// <param name="value">The string to convert.</param>
+        /// <param name="result">The variable that will be set to the value of the converted string.</param>
+        /// <returns>True if the operation was successful</returns>
         public static bool TryParse(string value, out bool result)
         {
             value = value.ToLower();

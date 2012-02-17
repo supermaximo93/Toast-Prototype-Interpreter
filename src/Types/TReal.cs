@@ -5,55 +5,53 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType/TNumber representing a real number, which is stored as a double.
+    /// </summary>
     class TReal : TNumber
     {
-        private double value;
-        public double Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public double Value { get; set; }
 
         public TReal()
         {
-            value = 0.0;
+            Value = 0.0;
         }
 
         public TReal(double initialValue)
         {
-            value = initialValue;
+            Value = initialValue;
         }
 
         public override string TypeName { get { return T_REAL_TYPENAME; } }
 
         public override string ToCSString()
         {
-            return value.ToString();
+            return Value.ToString();
         }
 
         public override TInteger ToTInteger()
         {
-            return new TInteger((Int64)Math.Round(value));
+            return new TInteger((Int64)Math.Round(Value));
         }
 
         public override TReal ToTReal()
         {
-            return new TReal(value);
+            return new TReal(Value);
         }
 
         public override TFraction ToTFraction()
         {
             long numerator, denominator;
-            Operations.Misc.DoubleToFraction(value, out numerator, out denominator);
+            Operations.Misc.DoubleToFraction(Value, out numerator, out denominator);
             return new TFraction(numerator, denominator);
         }
 
-        public override long TIntegerValue { get { return (long)Math.Round(value); } }
-        public override double TRealValue { get { return value; } }
+        public override long TIntegerValue { get { return (long)Math.Round(Value); } }
+        public override double TRealValue { get { return Value; } }
 
         public override TNumber ToNegative()
         {
-            return new TReal(-value);
+            return new TReal(-Value);
         }
     }
 }

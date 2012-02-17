@@ -5,35 +5,33 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType that contains another TType. It can even contain another TVariable in order to act as a reference to
+    /// that TVariable. TVariables by default contain a zeroed TInteger.
+    /// </summary>
     class TVariable : TType
     {
-        string identifier;
-        public string Identifier { get { return identifier; } }
+        public string Identifier { get; private set; }
 
-        TType value;
-        public TType Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public TType Value { get; set; }
 
         public TVariable(string name)
         {
-            identifier = name;
-            value = new TInteger(0);
+            Identifier = name;
+            Value = new TInteger(0);
         }
 
         public TVariable(string name, TType value)
         {
-            identifier = name;
-            this.value = value;
+            Identifier = name;
+            Value = value;
         }
 
         public override string TypeName { get { return T_VARIABLE_TYPENAME; } }
 
         public override string ToCSString()
         {
-            return identifier + (value is TVariable ? " => " : " = ") + value.ToCSString();
+            return Identifier + (Value is TVariable ? " => " : " = ") + Value.ToCSString();
         }
     }
 }

@@ -5,30 +5,28 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType representing a string of characters.
+    /// </summary>
     class TString : TType
     {
-        private string value;
-        public string Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public string Value { get; set; }
 
         public TString()
         {
-            value = "";
+            Value = "";
         }
 
         public TString(string value)
         {
-            this.value = value;
+            Value = value;
         }
 
         public override string TypeName { get { return T_STRING_TYPENAME; } }
 
         public override string ToCSString()
         {
-            return STRING_CHARACTER + value + STRING_CHARACTER;
+            return STRING_CHARACTER + Value + STRING_CHARACTER;
         }
     }
 }

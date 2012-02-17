@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType/TNumber representing a fraction, stored as two integers (the numerator and denominator)
+    /// </summary>
     class TFraction : TNumber
     {
         private long numerator;
@@ -42,7 +45,8 @@ namespace Toast.Types
 
         private void Simplify()
         {
-            if (denominator < 0) // Make denominator positive by making numerator negative instead or cancelling negatives
+            // Make denominator positive by making numerator negative instead or cancelling negatives
+            if (denominator < 0)
             {
                 numerator = -numerator;
                 denominator = -denominator;
@@ -56,7 +60,7 @@ namespace Toast.Types
                 else b -= a;
             }
 
-            long gcf = a > 0 ? a : b;
+            long gcf = a > 0 ? a : b; // gcf - greatest common factor
             numerator /= gcf;
             denominator /= gcf;
         }
@@ -91,6 +95,11 @@ namespace Toast.Types
             return new TFraction(-numerator, denominator);
         }
 
+        /// <summary>
+        /// Adds a fraction to this TFraction.
+        /// </summary>
+        /// <param name="otherNumerator">The numerator of the fraction to add.</param>
+        /// <param name="otherDenominator">The denominator of the fraction to add.</param>
         public void Add(long otherNumerator, long otherDenominator)
         {
             if (otherDenominator == denominator) numerator += otherNumerator;
@@ -102,6 +111,11 @@ namespace Toast.Types
             Simplify();
         }
 
+        /// <summary>
+        /// Subtracts a fraction from this TFraction.
+        /// </summary>
+        /// <param name="otherNumerator">The numerator of the fraction to subtract by.</param>
+        /// <param name="otherDenominator">The denominator of the fraction to subtract by.</param>
         public void Subtract(long otherNumerator, long otherDenominator)
         {
             if (otherDenominator == denominator) numerator -= otherNumerator;
@@ -113,6 +127,11 @@ namespace Toast.Types
             Simplify();
         }
 
+        /// <summary>
+        /// Multiplies this TFraction by a fraction.
+        /// </summary>
+        /// <param name="otherNumerator">The numerator of the fraction to multiply by.</param>
+        /// <param name="otherDenominator">The denominator of the fraction to multiply by.</param>
         public void Multiply(long otherNumerator, long otherDenominator)
         {
             numerator *= otherNumerator;
@@ -120,6 +139,11 @@ namespace Toast.Types
             Simplify();
         }
 
+        /// <summary>
+        /// Divides this TFraction by a fraction.
+        /// </summary>
+        /// <param name="otherNumerator">The numerator of the fraction to divide by.</param>
+        /// <param name="otherDenominator">The denominator of the fraction to divide by.</param>
         public void Divide(long otherNumerator, long otherDenominator)
         {
             numerator *= otherDenominator;

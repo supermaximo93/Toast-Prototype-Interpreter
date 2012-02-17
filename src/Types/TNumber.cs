@@ -5,6 +5,10 @@ using System.Text;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// The base class for all Toast numeric types. TNumbers have methods that allow them to be represented as other
+    /// types of TNumber.
+    /// </summary>
     abstract class TNumber : TType
     {
         public abstract TInteger ToTInteger();
