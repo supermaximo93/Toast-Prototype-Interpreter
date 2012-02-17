@@ -6,11 +6,18 @@ using Toast.Types.Singletons;
 
 namespace Toast.Types
 {
+    /// <summary>
+    /// A TType representing a function. Can contain a function as a hardcoded C# method, a string of Toast code
+    /// or a TBlock.
+    /// </summary>
     class TFunction : TType
     {
         public delegate TType function(Interpreter interpreter, TArgumentList args);
-        private static Dictionary<string, TFunction> functions;
+        static Dictionary<string, TFunction> functions;
 
+        /// <summary>
+        /// Initialises the function dictionaries and loads the Toast standard library functions.
+        /// </summary>
         public static void Init()
         {
             if (functions != null) return;
@@ -19,6 +26,12 @@ namespace Toast.Types
             StdLibrary.Init();
         }
 
+        /// <summary>
+        /// Searches for a Toast function with the specified name.
+        /// </summary>
+        /// <param name="functionName">The name of the Toast function to seach for.</param>
+        /// <param name="includeStdLibrary">Whether the Toast standard library should be searched.</param>
+        /// <returns>A TFunction if the operation was successful, otherwise null.</returns>
         public static TFunction GetFunction(string functionName, bool includeStdLibrary = true)
         {
             TFunction returnValue;
@@ -26,126 +39,160 @@ namespace Toast.Types
             return includeStdLibrary ? StdLibrary.GetFunction(functionName) : null;
         }
 
+        /// <summary>
+        /// Adds a TFunction to the function dictionary.
+        /// </summary>
+        /// <param name="interpreter">The interpreter that the method is being called from.</param>
+        /// <param name="function">The TFunction to be added to the function dictionary.</param>
+        /// <returns>Null if the operation was successful, otherwise a TException.</returns>
         public static TException AddFunction(Interpreter interpreter, TFunction function)
         {
-            TFunction existingFunction = StdLibrary.GetFunction(function.name);
-            if (existingFunction != null)
-                return new TException(interpreter, "Standard library function with name '" + function.name + "' already exists");
+            if (function == null) return new TException(interpreter, "Null TFunction given");
 
-            existingFunction = GetFunction(function.name, false);
+            // Reject the function if it's already in the standard library
+            TFunction existingFunction = StdLibrary.GetFunction(function.Name);
+            if (existingFunction != null)
+                return new TException(interpreter,
+                    "Standard library function with name '" + function.Name + "' already exists");
+
+            // Add it to the function dictionary, overwriting another function with the same name if neccessary
+            existingFunction = GetFunction(function.Name, false);
             if (existingFunction == null) functions.Add(function.Name, function);
             else
             {
-                existingFunction.hardCodedFunction = null;
-                existingFunction.customFunction = "";
-                existingFunction.block = null;
+                existingFunction.HardCodedFunction = null;
+                existingFunction.CustomFunction = "";
+                existingFunction.Block = null;
                 existingFunction.CopyFrom(function);
             }
 
             return null;
         }
 
-        private string name;
-        public string Name { get { return name; } }
+        public string Name { get; private set; }
+        public string[] ArgNames { get; private set; }
+        public int ArgCount { get { return ArgNames == null ? -1 : ArgNames.Length; } }
 
-        private string[] argNames;
-        public string[] ArgNames { get { return argNames; } }
-        public int ArgCount { get { if (argNames == null) return -1; return argNames.Length; } }
+        public TType[] DefaultArgs { get; private set; }
 
-        private TType[] defaultArgs;
-        public TType[] DefaultArgs { get { return defaultArgs; } }
+        public function HardCodedFunction { get; private set; }
+        public string CustomFunction { get; private set; }
+        public TBlock Block { get; private set; }
 
-        private function hardCodedFunction;
-        public function HardCodedFunction { get { return hardCodedFunction; } }
+        /// <summary>
+        /// A helper method used by TFunction constructors to copy argument names and argument default values passed
+        /// to them.
+        /// </summary>
+        void CopyArguments(string[] argNames, TType[] defaultArgs)
+        {
+            if (argNames == null)
+            {
+                ArgNames = null;
+                DefaultArgs = null;
+            }
+            else
+            {
+                ArgNames = new string[argNames.Length];
+                if (argNames.Length > 0) argNames.CopyTo(ArgNames, 0);
 
-        private string customFunction;
-        public string CustomFunction { get { return customFunction; } }
+                if (defaultArgs == null) DefaultArgs = new TType[argNames.Length];
+                else
+                {
+                    DefaultArgs = new TType[argNames.Length];
+                    if (defaultArgs.Length > 0) defaultArgs.CopyTo(DefaultArgs, 0);
+                }
+            }
+        }
 
-        private TBlock block;
-        public TBlock Block { get { return block; } }
+        // Someone tell me if there's a better way to document three similar but slightly different methods...
 
+        /// <summary>
+        /// A TFunction constructor.
+        /// </summary>
+        /// <param name="name">The name of the new Toast function.</param>
+        /// <param name="function">The C# method which is called when the Toast function is called.</param>
+        /// <param name="argNames">
+        /// The argument names to use in the function. Pass null for the function to use a variable number of
+        /// arguments.
+        /// </param>
+        /// <param name="defaultArgs">
+        /// The default values of arguments, as TTypes. Use null in the array to specify that no default value should
+        /// be used for a particular argument, or pass null to indicate that no arguments should have default values.
+        /// </param>
         public TFunction(string name, function function, string[] argNames, TType[] defaultArgs)
         {
-            this.name = name;
-            hardCodedFunction = function;
-            customFunction = "";
-            block = null;
-
-            if (argNames == null)
-            {
-                this.argNames = null;
-                this.defaultArgs = null;
-            }
-            else
-            {
-                this.argNames = new string[argNames.Length];
-                if (argNames.Length > 0) argNames.CopyTo(this.argNames, 0);
-
-                if (defaultArgs == null) this.defaultArgs = new TType[argNames.Length];
-                else
-                {
-                    this.defaultArgs = new TType[argNames.Length];
-                    if (defaultArgs.Length > 0) defaultArgs.CopyTo(this.defaultArgs, 0);
-                }
-            }
+            Name = name;
+            HardCodedFunction = function;
+            CustomFunction = "";
+            Block = null;
+            CopyArguments(argNames, defaultArgs);
         }
 
+        /// <summary>
+        /// A TFunction constructor.
+        /// </summary>
+        /// <param name="name">The name of the new Toast function.</param>
+        /// <param name="function">A string of Toast code to be executed when the Toast function is called.</param>
+        /// <param name="argNames">
+        /// The argument names to use in the function. Pass null for the function to use a variable number of
+        /// arguments.
+        /// </param>
+        /// <param name="defaultArgs">
+        /// The default values of arguments, as TTypes. Use null in the array to specify that no default value should
+        /// be used for a particular argument, or pass null to indicate that no arguments should have default values.
+        /// </param>
         public TFunction(string name, string function, string[] argNames, TType[] defaultArgs)
         {
-            this.name = name;
-            hardCodedFunction = null;
-            customFunction = function;
-            block = null;
-
-            if (argNames == null)
-            {
-                this.argNames = null;
-                this.defaultArgs = null;
-            }
-            else
-            {
-                this.argNames = new string[argNames.Length];
-                if (argNames.Length > 0) argNames.CopyTo(this.argNames, 0);
-
-                if (defaultArgs == null) this.defaultArgs = new TType[argNames.Length];
-                else
-                {
-                    this.defaultArgs = new TType[argNames.Length];
-                    if (defaultArgs.Length > 0) defaultArgs.CopyTo(this.defaultArgs, 0);
-                }
-            }
+            Name = name;
+            HardCodedFunction = null;
+            CustomFunction = function;
+            Block = null;
+            CopyArguments(argNames, defaultArgs);
         }
 
+        /// <summary>
+        /// A TFunction constructor.
+        /// </summary>
+        /// <param name="name">The name of the new Toast function.</param>
+        /// <param name="function">A TBlock to be executed when the Toast function is called.</param>
+        /// <param name="argNames">
+        /// The argument names to use in the function. Pass null for the function to use a variable number of
+        /// arguments.
+        /// </param>
+        /// <param name="defaultArgs">
+        /// The default values of arguments, as TTypes. Use null in the array to specify that no default value should
+        /// be used for a particular argument, or pass null to indicate that no arguments should have default values.
+        /// </param>
         public TFunction(string name, TBlock block, string[] argNames, TType[] defaultArgs)
         {
-            this.name = name;
-            this.block = block;
-            hardCodedFunction = null;
-            customFunction = "";
-
-            if (argNames == null)
-            {
-                this.argNames = null;
-                this.defaultArgs = null;
-            }
-            else
-            {
-                this.argNames = new string[argNames.Length];
-                if (argNames.Length > 0) argNames.CopyTo(this.argNames, 0);
-
-                if (defaultArgs == null) this.defaultArgs = new TType[argNames.Length];
-                else
-                {
-                    this.defaultArgs = new TType[argNames.Length];
-                    if (defaultArgs.Length > 0) defaultArgs.CopyTo(this.defaultArgs, 0);
-                }
-            }
+            Name = name;
+            Block = block;
+            HardCodedFunction = null;
+            CustomFunction = "";
+            CopyArguments(argNames, defaultArgs);
         }
 
+        /// <summary>
+        /// A copy constructor or TFunction.
+        /// </summary>
+        /// <param name="function">The existing TFunction whose data is to be copied into the new TFunction.</param>
+        public TFunction(TFunction function)
+        {
+            CopyFrom(function);
+        }
+
+        /// <summary>
+        /// Calls the TFunction with the specified arguments.
+        /// </summary>
+        /// <param name="interpreter">The interpreter that the method is being called from.</param>
+        /// <param name="value">
+        /// The argument to pass to the function. When passing multiple arguments, use a TArgumentList.
+        /// </param>
+        /// <returns></returns>
         public TType Call(Interpreter interpreter, TType value)
         {
-            TException exception = new TException(interpreter, "Incorrect number of arguments for function '" + name + "'");
-
+            // If value is already a TArgumentList, then simply copy the reference, otherwise create a new
+            // TArgumentList and add the value to it. This TArgument list is to be passed to the function.
             TArgumentList argList = value as TArgumentList;
             if (argList == null)
             {
@@ -153,107 +200,84 @@ namespace Toast.Types
                 argList.Add(value);
             }
 
-            if (argNames != null)
+            // If the function takes a fixed number of arguments...
+            if (ArgNames != null)
             {
-                if (argList.Count < argNames.Length)
+                // Occupy the argument list with the default arguments. If there is no default argument in a place
+                // where an argument should have been given, return a TException.
+                if (argList.Count < ArgNames.Length)
                 {
-                    for (int i = argList.Count; i < defaultArgs.Length; ++i)
+                    for (int i = argList.Count; i < DefaultArgs.Length; ++i)
                     {
-                        if (defaultArgs[i] == null) break;
-                        else argList.Add(defaultArgs[i]);
+                        if (DefaultArgs[i] == null) break;
+                        else argList.Add(DefaultArgs[i]);
                     }
                 }
-                if (argList.Count != argNames.Length)
+
+                if (argList.Count != ArgNames.Length)
                 {
-                    exception.Hint = argList.Count.ToString() + " out of " + argNames.Length.ToString() + " given";
-                    return exception;
+                    return new TException(interpreter, "Incorrect number of arguments for function '" + Name + "'",
+                        argList.Count.ToString() + " out of " + ArgNames.Length.ToString() + " given");
                 }
             }
 
             interpreter.Stack.Push();
+            // Keep a track of the new stack level so that if a function calls 'exit()', which pops from the stack,
+            // this will be able to be detected and the function call can be terminated properly
             int stackLevel = interpreter.Stack.Level;
 
-            if (argNames == null)
+            // Put the arguments on the current stack 'frame'
+            if (ArgNames == null)
             {
-                for (int i = 0; i < argList.Count; ++i) interpreter.Stack.AddVariable(new TVariable("arg" + i.ToString(), argList[i]));
+                for (int i = 0; i < argList.Count; ++i)
+                    interpreter.Stack.AddVariable(new TVariable("arg" + i.ToString(), argList[i]));
             }
             else
             {
-                for (int i = 0; i < argList.Count; ++i) interpreter.Stack.AddVariable(new TVariable(argNames[i], argList[i]));
+                for (int i = 0; i < argList.Count; ++i)
+                    interpreter.Stack.AddVariable(new TVariable(ArgNames[i], argList[i]));
             }
-
 
             TType returnValue = null;
-            bool dontPop = false;
+            bool dontPop = false; // Set to true if the stack is popped during the call, i.e. if 'exit()' is called
 
-            if (hardCodedFunction != null) returnValue = hardCodedFunction.Invoke(interpreter, argList);
-            else if (customFunction != "")
+            // Call the function
+            if (HardCodedFunction != null) returnValue = HardCodedFunction.Invoke(interpreter, argList);
+            else if (Block != null) returnValue = Block.Execute(interpreter, out dontPop);
+            else if (CustomFunction != "")
             {
-                returnValue = interpreter.Interpret(customFunction, true);
+                returnValue = interpreter.Interpret(CustomFunction, true);
                 if (interpreter.Stack.Level < stackLevel) dontPop = true;
             }
-            else if (block != null)
-            {
-                TBlock previousCurrentBlock = interpreter.CurrentBlock;
-                interpreter.CurrentBlock = block;
-                block.ResetLine();
 
-                while (!block.EndOfBlock)
-                {
-                    returnValue = block.ExecuteLine(interpreter);
-
-                    if (interpreter.Stack.Level < stackLevel)
-                    {
-                        dontPop = true;
-                        break;
-                    }
-                    else if (returnValue is TException) break;
-                }
-
-                interpreter.CurrentBlock = previousCurrentBlock;
-            }
-
-            {
-                TVariable variable = returnValue as TVariable;
-                if (variable != null) returnValue = variable.Value;
-            }
+            // If returnValue is a TVariable, then return the value of the TVariable (e.g. we want to return 5, as
+            // opposed to the variable X which contains 5)
+            TVariable variable = returnValue as TVariable;
+            if (variable != null) returnValue = variable.Value;
 
             if (!dontPop) interpreter.Stack.Pop();
 
             return returnValue ?? TNil.Instance;
         }
 
-        public void CopyFrom(TFunction otherFunction)
+        /// <summary>
+        /// Copies the data from another TFunction into this TFunction.
+        /// </summary>
+        /// <param name="function">The existing TFunction whose data is to be copied into the new TFunction.</param>
+        public void CopyFrom(TFunction function)
         {
-            name = otherFunction.name;
-            hardCodedFunction = otherFunction.hardCodedFunction;
-            customFunction = otherFunction.customFunction;
-            block = otherFunction.block;
-
-            if (otherFunction.argNames == null)
-            {
-                argNames = null;
-                defaultArgs = null;
-            }
-            else
-            {
-                argNames = new string[otherFunction.argNames.Length];
-                if (argNames.Length > 0) otherFunction.argNames.CopyTo(argNames, 0);
-
-                if (otherFunction.defaultArgs == null) defaultArgs = new TType[otherFunction.argNames.Length];
-                else
-                {
-                    defaultArgs = new TType[otherFunction.argNames.Length];
-                    if (defaultArgs.Length > 0) otherFunction.defaultArgs.CopyTo(defaultArgs, 0);
-                }
-            }
+            Name = function.Name;
+            HardCodedFunction = function.HardCodedFunction;
+            CustomFunction = function.CustomFunction;
+            Block = function.Block;
+            CopyArguments(function.ArgNames, function.DefaultArgs);
         }
 
         public override string TypeName { get { return "function"; } }
 
         public override string ToCSString()
         {
-            return name;
+            return Name;
         }
     }
 }

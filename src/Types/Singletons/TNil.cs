@@ -5,9 +5,12 @@ using System.Text;
 
 namespace Toast.Types.Singletons
 {
+    /// <summary>
+    /// A class used to represent a null value in Toast.
+    /// </summary>
     class TNil : TType
     {
-        private static readonly TNil instance = new TNil();
+        static readonly TNil instance = new TNil();
         public static TNil Instance { get { return instance; } }
 
         public override string TypeName { get { return T_NIL_TYPENAME; } }
@@ -16,5 +19,7 @@ namespace Toast.Types.Singletons
         {
             return "nil";
         }
+
+        private TNil() {}
     }
 }

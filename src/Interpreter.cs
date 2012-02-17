@@ -599,7 +599,7 @@ namespace Toast
 
                                 bool exitFromFunction;
                                 if (result.Value) return block.Execute(this, out exitFromFunction, true);
-                                else if (block.HasOtherwise()) return block.Execute(this, out exitFromFunction, false);
+                                else if (block.HasElse()) return block.Execute(this, out exitFromFunction, false);
                             }
                             return result;
                         }

@@ -54,6 +54,7 @@ namespace Toast.Types
                 string str = ((string)obj).Trim();
                 if (str == "") return TNil.Instance;
 
+                // Attempt to convert to a keyword first
                 if ((str == "yes") || (str == "no")) return new TBoolean(str);
                 if (str == "nil") return TNil.Instance;
                 if (str == "break") return TBreak.Instance;
@@ -66,11 +67,11 @@ namespace Toast.Types
                     double result;
                     if (double.TryParse(str, out result)) return new TReal(result);
                 }
-                {
+                {   // If first and last characters of string are '"', then return a TString
                     if ((str.First() == STRING_CHARACTER) && (str.Last() == STRING_CHARACTER))
                         return new TString(str.Substring(1, str.Length - 2));
                 }
-                {
+                {   // Attempt to find a function or variable with the name
                     TType result = TFunction.GetFunction(str);
                     if (result == null)
                     {
