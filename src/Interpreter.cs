@@ -780,44 +780,6 @@ namespace Toast
                     return new TException(this, "Dereference of value type variable", "expected reference variable");
                 group.RemoveAt(index + 1);
             }
-
-            while ((index = group.IndexOf("-")) >= 0)
-            {
-                if (index + 1 >= group.Count) return new TException(this, "Invalid expression term '-'");
-
-                TType b = TType.Parse(this, group[index + 1]);
-                if (b is TException) return b;
-
-                bool aExists = false;
-                if (index - 1 >= 0)
-                {
-                    TType a = TType.Parse(this, group[index - 1]);
-                    if (!(a is TException))
-                    {
-                        group[index] = "+";
-                        aExists = true;
-                    }
-                }
-
-                TNumber number = b as TNumber;
-                if (number == null)
-                {
-                    TException exception = new TException(this, "Failed to make value negative",
-                        "Values of type '" + b.TypeName + "' cannot be made negative");
-                    TVariable variable = b as TVariable;
-                    if (variable == null) return exception;
-
-                    number = variable.Value as TNumber;
-                    if (number == null) return exception;
-                }
-
-                if (!aExists)
-                {
-                    group[index] = number.ToNegative();
-                    group.RemoveAt(index + 1);
-                }
-                else group[index + 1] = number.ToNegative();
-            }
             
             while ((index = group.IndexOf(TType.MODULUS_CHARACTER.ToString())) >= 0)
             {
@@ -855,49 +817,65 @@ namespace Toast
                 group.RemoveRange(index, 2);
             }
 
-            while ((index = group.IndexOf("/")) >= 0)
+            while (true)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '/'");
+                int divIndex = group.IndexOf("/"), mulIndex = group.IndexOf("*");
+                if (divIndex < 0) index = mulIndex;
+                else if (mulIndex < 0) index = divIndex;
+                else index = divIndex < mulIndex ? divIndex : mulIndex;
+                if (index < 0) break;
+
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '" + group[index] + "'");
 
                 TType a = TType.Parse(this, group[index - 1]);
                 if (a is TException) return a;
                 TType b = TType.Parse(this, group[index + 1]);
                 if (b is TException) return b;
 
-                TType result = Operations.Math.Divide(this, a, b);
-                if (result == null) return new TException(this, "Division operation failed", "reason unknown");
+                TType result;
+                if ((string)group[index] == "/")
+                {
+                    result = Operations.Math.Divide(this, a, b);
+                    if (result == null) return new TException(this, "Division operation failed", "reason unknown");
+                }
+                else
+                {
+                    result = Operations.Math.Multiply(this, a, b);
+                    if (result == null) return new TException(this, "Multiplication operation failed", "reason unknown");
+                }
+                
                 if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
 
-            while ((index = group.IndexOf("*")) >= 0)
+            while (true)
             {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '*'");
+                int addIndex = group.IndexOf("+"), subIndex = group.IndexOf("-");
+                if (addIndex < 0) index = subIndex;
+                else if (subIndex < 0) index = addIndex;
+                else index = addIndex < subIndex ? addIndex : subIndex;
+                if (index < 0) break;
+
+                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '" + group[index] + "'");
 
                 TType a = TType.Parse(this, group[index - 1]);
                 if (a is TException) return a;
                 TType b = TType.Parse(this, group[index + 1]);
                 if (b is TException) return b;
 
-                TType result = Operations.Math.Multiply(this, a, b);
-                if (result == null) return new TException(this, "Multiplication operation failed", "reason unknown");
-                if (result is TException) return result;
-                group[index - 1] = result;
-                group.RemoveRange(index, 2);
-            }
+                TType result;
+                if ((string)group[index] == "+")
+                {
+                    result = Operations.Math.Add(this, a, b);
+                    if (result == null) return new TException(this, "Addition operation failed", "reason unknown");
+                }
+                else
+                {
+                    result = Operations.Math.Subtract(this, a, b);
+                    if (result == null) return new TException(this, "Subtraction operation failed", "reason unknown");
+                }
 
-            while ((index = group.IndexOf("+")) >= 0)
-            {
-                if ((index - 1 < 0) || (index + 1 >= group.Count)) return new TException(this, "Invalid expression term '+'");
-
-                TType a = TType.Parse(this, group[index - 1]);
-                if (a is TException) return a;
-                TType b = TType.Parse(this, group[index + 1]);
-                if (b is TException) return b;
-
-                TType result = Operations.Math.Add(this, a, b);
-                if (result == null) return new TException(this, "Addition operation failed", "reason unknown");
                 if (result is TException) return result;
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
