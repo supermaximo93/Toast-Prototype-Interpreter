@@ -142,7 +142,7 @@ namespace Toast.Types
                          *      <block>
                          *      end
                          *      
-                         *      I.e. if the last occurence of 'if' is before the current 'else'
+                         *      I.e. if the last occurrence of 'if' is before the current 'else'
                          *      and the current 'else' is the last symbol of the line
                          *      
                          * increment the block level.

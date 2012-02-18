@@ -546,9 +546,14 @@ namespace Toast
             if (a is TNumber)
             {
                 bool result;
-                if (strict) result = ((a as TNumber).TRealValue == (b as TNumber).TRealValue);
-                else result = ((a as TNumber).TIntegerValue == (b as TNumber).TIntegerValue);
-
+                if (strict) result =
+                    (System.Math.Abs((a as TNumber).TRealValue - (b as TNumber).TRealValue) < 0.000001);
+                else
+                {
+                    double aVal = (a as TNumber).TRealValue, bVal = (b as TNumber).TRealValue;
+                    if ((System.Math.Round(aVal) == bVal) || (System.Math.Round(bVal) == aVal)) result = true;
+                    else result = (System.Math.Abs(aVal - bVal) < 0.5);
+                }
                 return new TBoolean(result);
             }
             else if (a is TBoolean)
