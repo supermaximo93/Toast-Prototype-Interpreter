@@ -243,7 +243,11 @@ namespace Toast.Types
 
             // Call the function
             if (HardCodedFunction != null) returnValue = HardCodedFunction.Invoke(interpreter, argList);
-            else if (Block != null) returnValue = Block.Execute(interpreter, out dontPop);
+            else if (Block != null)
+            {
+                bool breakUsed;
+                returnValue = Block.Execute(interpreter, out dontPop, out breakUsed);
+            }
             else if (CustomFunction != "")
             {
                 returnValue = interpreter.Interpret(CustomFunction, true);

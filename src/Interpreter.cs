@@ -231,10 +231,20 @@ namespace Toast
         /// <param name="statement">The string to split into symbols.</param>
         /// <param name="exception">A value that will be set if an error occurs.</param>
         /// <returns>The Interpreter.Group that contains the resulting symbols. Returns null on failure.</returns>
-        public Group SplitIntoSymbols(string statement, out TException exception)
+        public Group SplitIntoSymbols(string statement, out TException exception, out bool isCommentLine)
         {
             exception = null;
             statement = statement.Trim();
+
+            // Ignore comments and empty strings
+            int commentIndex;
+            if ((commentIndex = statement.IndexOf("//")) >= 0) statement = statement.Remove(commentIndex);
+            if (statement == "")
+            {
+                isCommentLine = true;
+                return null;
+            }
+            isCommentLine = false;
 
             // Extract the strings from the statement, storing them in a list
             List<string> strings = new List<string>();
@@ -311,12 +321,18 @@ namespace Toast
                 // If any opening brackets are found, create a new Group to contain the symbols within the brackets
                 if ((s == "(") || ((s == "|") && !modulusOpen))
                 {
+                    Group newGroup;
                     if (s == "|") // If a modulus bracket is found, create a new group between the modulus brackets
                     {
+                        // Do this to the modulus brackets: (|(stuff)|) so 'my_func|x|' will work
+                        newGroup = new Group(currentGroup);
+                        currentGroup = newGroup;
+                        ++groupDepth;
+
                         modulusOpen = true;
                         currentGroup.Add(s);
                     }
-                    Group newGroup = new Group(currentGroup);
+                    newGroup = new Group(currentGroup);
                     currentGroup = newGroup;
                     ++groupDepth;
                 }
@@ -329,6 +345,8 @@ namespace Toast
                     {
                         modulusOpen = false;
                         currentGroup.Add(s);
+                        if (currentGroup.ParentGroup != null) currentGroup = currentGroup.ParentGroup;
+                        --groupDepth;
                     }
                 }
                 else if (s == "\"")
@@ -379,19 +397,16 @@ namespace Toast
                 return new TException(this, "Halting interpreter execution");
             }
 
-            // Ignore comments and empty strings
-            int commentIndex;
-            if ((commentIndex = statement.IndexOf("//")) >= 0) statement = statement.Remove(commentIndex);
-            if (statement == "") return TNil.Instance;
-
             // Convert the statement into a Group, outputting any errors
             TException exception;
-            Group group = SplitIntoSymbols(statement, out exception);
+            bool isComment;
+            Group group = SplitIntoSymbols(statement, out exception, out isComment);
             if (exception != null)
             {
                 System.Console.WriteLine(exception.ToCSString());
                 return TNil.Instance;
             }
+            if (group == null) return TNil.Instance;
 
             // Parse the group and output the return value
             TType value = ParseGroup(group);
@@ -472,8 +487,8 @@ namespace Toast
                         TBlock block = value as TBlock;
                         if (block != null)
                         {
-                            bool exitFromFunction;
-                            functionReturnValue = block.Execute(this, out exitFromFunction);
+                            bool exitFromFunction, breakUsed;
+                            functionReturnValue = block.Execute(this, out exitFromFunction, out breakUsed);
                             if (exitFromFunction) return functionReturnValue;
                             functionCalled = true;
                         }
@@ -494,8 +509,8 @@ namespace Toast
                                     block = variable.Value as TBlock;
                                     if (block != null)
                                     {
-                                        bool exitFromFunction;
-                                        functionReturnValue = block.Execute(this, out exitFromFunction);
+                                        bool exitFromFunction, breakUsed;
+                                        functionReturnValue = block.Execute(this, out exitFromFunction, out breakUsed);
                                         if (exitFromFunction) return functionReturnValue;
                                         functionCalled = true;
                                     }
@@ -718,8 +733,18 @@ namespace Toast
             if (value is TException) return value;
 
             TBoolean result = value as TBoolean;
-            if (result == null) return new TException(this, "Condition does not evaluate to a boolean value",
-                "yes or no");
+            if (result == null)
+            {
+                bool success = false;
+                TVariable variable = value as TVariable;
+                if (variable != null)
+                {
+                    result = variable.Value as TBoolean;
+                    if (result != null) success = true;
+                }
+                if (!success)
+                    return new TException(this, "Condition does not evaluate to a boolean value", "yes or no");
+            }
 
             if (group.Count > commaIndex + 1) // If there is no block after the 'if' <condition> ','
             {
@@ -755,8 +780,8 @@ namespace Toast
                     }
                     else
                     {
-                        bool exitFromFunction;
-                        return elseBlock.Execute(this, out exitFromFunction);
+                        bool exitFromFunction, breakUsed;
+                        return elseBlock.Execute(this, out exitFromFunction, out breakUsed);
                     }
                 }
                 else return result;
@@ -767,9 +792,9 @@ namespace Toast
                 TBlock block = new TBlock(this, out exception, true);
                 if (exception != null) return exception;
 
-                bool exitFromFunction;
-                if (result.Value) return block.Execute(this, out exitFromFunction, true);
-                if (block.HasElse()) return block.Execute(this, out exitFromFunction, false);
+                bool exitFromFunction, breakUsed;
+                if (result.Value) return block.Execute(this, out exitFromFunction, out breakUsed, true);
+                if (block.HasElse()) return block.Execute(this, out exitFromFunction, out breakUsed, false);
             }
 
             return result;
@@ -813,6 +838,7 @@ namespace Toast
                 if (exception != null) return exception;
             }
 
+            TType returnValue = TNil.Instance;
             while (true)
             {
                 // Parse the condition, and if it's true run the block or single statement, otherwise return MNil
@@ -821,22 +847,31 @@ namespace Toast
 
                 TBoolean result = value as TBoolean;
                 if (result == null)
-                    return new TException(this, "Condition does not evaluate to a boolean value", "yes or no");
+                {
+                    bool success = false;
+                    TVariable variable = value as TVariable;
+                    if (variable != null)
+                    {
+                        result = variable.Value as TBoolean;
+                        if (result != null) success = true;
+                    }
+                    if (!success)
+                        return new TException(this, "Condition does not evaluate to a boolean value", "yes or no");
+                }
 
                 if (result.Value)
                 {
-                    TType returnValue;
+                    bool breakUsed = false;
                     if (statementGroup != null) returnValue = ParseGroup((Group)statementGroup.Clone());
                     else
                     {
                         bool exitFromFunction;
-                        returnValue = block.Execute(this, out exitFromFunction);
+                        returnValue = block.Execute(this, out exitFromFunction, out breakUsed);
                         if (exitFromFunction) return returnValue;
                     }
-                    if (returnValue is TException) return returnValue;
-                    if (returnValue is TBreak) return TNil.Instance;
+                    if ((returnValue is TException) || breakUsed) return returnValue;
                 }
-                else return TNil.Instance;
+                else return returnValue;
 
                 if (!alive) return TNil.Instance;
             }

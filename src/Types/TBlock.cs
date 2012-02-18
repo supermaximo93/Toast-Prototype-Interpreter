@@ -39,12 +39,14 @@ namespace Toast.Types
                 string statement = interpreter.GetInput().Trim();
 
                 // Split the statement into symbols so we can analyse it to find out where the block begin/ends are
-                Interpreter.Group symbolGroup = interpreter.SplitIntoSymbols(statement, out exception);
+                bool isComment;
+                Interpreter.Group symbolGroup = interpreter.SplitIntoSymbols(statement, out exception, out isComment);
                 if (exception != null)
                 {
                     statements.Clear();
                     break;
                 }
+                if (isComment) continue;
 
                 // A bit of Linq to easily count the number of a particular keyword in a group
                 string keywordName = "";
@@ -89,6 +91,16 @@ namespace Toast.Types
                 {
                     string commaStr = symbolGroup[symbolGroup.Count - 1] as string;
                     if ((commaStr != null) && (commaStr == ",")) ++blockLevel;
+                }
+
+                // Increment if there is a multi-line function declaration (let <ident><group> =<nothing>)
+                int equalsIndex;
+                if ((equalsIndex = symbolGroup.IndexOf("=")) == symbolGroup.Count - 1)
+                {
+                    if ((equalsIndex > 1) && (symbolGroup[equalsIndex - 1] is Interpreter.Group))
+                    {
+                        if (symbolGroup.LastIndexOf("let", equalsIndex - 2) >= 0) ++blockLevel;
+                    }
                 }
 
                 bool breakNow = false; // For a double break
@@ -182,11 +194,13 @@ namespace Toast.Types
         /// <param name="exitFromFunction">
         /// A value that will be set to whether 'exit()' was called during the block execution.
         /// </param>
+        /// <param name="breakUsed">Whethe the 'break' keyword was used in the block.</param>
         /// <param name="beforeElse">Whether to execute the code before the 'else', if any.</param>
         /// <returns>A TType value of the result of the last executed statement in the block.</returns>
-        public TType Execute(Interpreter interpreter, out bool exitFromFunction, bool beforeElse = true)
+        public TType Execute(Interpreter interpreter, out bool exitFromFunction, out bool breakUsed,
+            bool beforeElse = true)
         {
-            exitFromFunction = false;
+            exitFromFunction = breakUsed = false;
             if (!beforeElse && (elseLocation < 0)) return new TException(interpreter, "No else statement found");
 
             int start, end;
@@ -215,9 +229,10 @@ namespace Toast.Types
             TBlock previousCurrentBlock = interpreter.CurrentBlock;
             interpreter.CurrentBlock = this;
 
-            TType returnValue = null;
+            TType returnValue = null, previousReturnValue = null;
             for (currentLine = start; currentLine <= end; ++currentLine)
             {
+                previousReturnValue = returnValue;
                 returnValue = interpreter.Interpret(statements[currentLine], true);
 
                 if (interpreter.Stack.Level < stackLevel) // if 'exit()' was called
@@ -227,7 +242,13 @@ namespace Toast.Types
                 }
 
                 // Need to check for TBreak so that it can be used to break from a loop (if any)
-                if ((returnValue is TException) || (returnValue is TBreak)) break;
+                if (returnValue is TException) break;
+                if (returnValue is TBreak)
+                {
+                    returnValue = previousReturnValue ?? TNil.Instance;
+                    breakUsed = true;
+                    break;
+                }
             }
 
             // Now that the block has finished executing its code, restore control to the outer block
