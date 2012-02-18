@@ -117,7 +117,7 @@ namespace Toast.Types
                                      * and stop populating the block with statments
                                      */
                                     statements.Add("else");
-                                    statements.Add(statement.Substring(10, statement.Length - 10));
+                                    statements.Add(statement.Substring(4, statement.Length - 4));
                                     breakNow = true;
                                 }
                             }

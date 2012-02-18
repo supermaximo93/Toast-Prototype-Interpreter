@@ -523,7 +523,7 @@ namespace Toast
 
             exception = ParseBidmasOfGroup(group);
             if (exception != null) return exception;
-
+            
             exception = ParseComparisonsOfGroup(group);
             if (exception != null) return exception;
 
@@ -714,7 +714,6 @@ namespace Toast
 
             Group conditionGroup = new Group(null);
             conditionGroup.AddRange(group.GetRange(1, commaIndex - 1));
-
             TType value = ParseGroup(conditionGroup);
             if (value is TException) return value;
 
@@ -1071,16 +1070,37 @@ namespace Toast
                 else index = addIndex < subIndex ? addIndex : subIndex;
                 if (index < 0) break;
 
-                if ((index - 1 < 0) || (index + 1 >= group.Count))
+                char operatorChar = ((string)group[index])[0];
+
+                if (index - 1 < 0)
+                { // There's no number before the operator, so perform a unary operation
+                    TException exception = ParseUnaryArtitmetic(group, index, operatorChar);
+                    if (exception != null) return exception;
+                    continue;
+                }
+                else if (index + 1 >= group.Count)
                     return new TException(this, "Invalid expression term '" + group[index] + "'");
 
                 TType a = TType.Parse(this, group[index - 1]);
-                if (a is TException) return a as TException;
+                if (a is TException)
+                {
+                    string possibleOperator = group[index - 1] as string;
+                    if (possibleOperator != null)
+                    {
+                        if (RESERVED_SYMBOLS.Contains(possibleOperator))
+                        {
+                            TException exception = ParseUnaryArtitmetic(group, index, operatorChar);
+                            if (exception != null) return exception;
+                            continue;
+                        }
+                    }
+                    return a as TException;
+                }
                 TType b = TType.Parse(this, group[index + 1]);
                 if (b is TException) return b as TException;
 
                 TType result;
-                if ((string)group[index] == "+")
+                if (operatorChar == '+')
                 {
                     result = Operations.Math.Add(this, a, b);
                     if (result == null) return new TException(this, "Addition operation failed", "reason unknown");
@@ -1095,6 +1115,36 @@ namespace Toast
                 group[index - 1] = result;
                 group.RemoveRange(index, 2);
             }
+
+            return null;
+        }
+
+        TException ParseUnaryArtitmetic(Group group, int index, char operatorChar)
+        {
+            if (index + 1 >= group.Count)
+                return new TException(this, "Invalid expression term '" + group[index] + "'");
+
+            // Try and get a TNumber value out of the operand
+            TType operand = TType.Parse(this, group[index + 1]);
+            if (operand is TException) return operand as TException;
+
+            TNumber number = operand as TNumber;
+            if (number == null)
+            {
+                TVariable variable = operand as TVariable;
+                if (variable == null)
+                    return new TException(this, "Failed to perform unary arithmetic operation",
+                        "only numbers can be used");
+
+                number = variable.Value as TNumber;
+                if (number == null)
+                    return new TException(this, "Failed to perform unary arithmetic operation",
+                        "only numbers can be used");
+            }
+
+            if (operatorChar == '-') group[index] = number.ToNegative();
+            else group[index] = number;
+            group.RemoveAt(index + 1);
 
             return null;
         }
