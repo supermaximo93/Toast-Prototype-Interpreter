@@ -1,14 +1,18 @@
+///////////////////////////////////////////////////////////////////////
+///////////////          ROCK, PAPER, SCISSORS          ///////////////
+///////////////////////////////////////////////////////////////////////
+
 print("Rock, paper scissors")
 
 let getInput() =
   print("Type 'rock', 'paper' or 'scissors'. Type 'quit' to finish")
-	while yes,
-		let input = read_string()
-		if input = "quit", exit(-1) else
-			if input = "rock" or input = "paper" or input = "scissors", break
-			print("No! Type 'rock', 'paper' or 'scissors'! Type 'quit' to finish!")
-		end
-	end
+  while yes,
+    let input = read_string()
+    if input = "quit", exit(-1) else
+      if input = "rock" or input = "paper" or input = "scissors", break
+      print("No! Type 'rock', 'paper' or 'scissors'! Type 'quit' to finish!")
+    end
+  end
 
   let playerChoice = 0
 
@@ -28,36 +32,36 @@ let play(playerChoice, playerScoreRef, cpuScoreRef) =
   
   if playerChoice = 0,
     if cpuChoice = 0, print("Tie!") else
-			if cpuChoice = 1,
-				print("You lose!")
-				let ~cpuScoreRef = ~cpuScoreRef + 1
-			else
-				print("You win!")
-				let ~playerScoreRef = ~playerScoreRef + 1
-			end
+      if cpuChoice = 1,
+        print("You lose!")
+        let ~cpuScoreRef = ~cpuScoreRef + 1
+      else
+        print("You win!")
+        let ~playerScoreRef = ~playerScoreRef + 1
+      end
     end
   else
-		if playerChoice = 1,
-			if cpuChoice = 0,
-				print("You win!")
-				let ~playerScoreRef = ~playerScoreRef + 1
-			else
-				if cpuChoice = 1, print("Tie!") else
-					let ~cpuScoreRef = ~cpuScoreRef + 1
-					print("You lose!")
-				end
-			end
-		else
-			if cpuChoice = 0,
-				print("You lose!")
-				let ~cpuScoreRef = ~cpuScoreRef + 1
-			else
-				if cpuChoice = 1,
-					print("You win!")
-					let ~playerScoreRef = ~playerScoreRef + 1
-				else print("Tie!")
-			end
-		end
+    if playerChoice = 1,
+      if cpuChoice = 0,
+        print("You win!")
+        let ~playerScoreRef = ~playerScoreRef + 1
+      else
+        if cpuChoice = 1, print("Tie!") else
+          let ~cpuScoreRef = ~cpuScoreRef + 1
+          print("You lose!")
+        end
+      end
+    else
+      if cpuChoice = 0,
+        print("You lose!")
+        let ~cpuScoreRef = ~cpuScoreRef + 1
+      else
+        if cpuChoice = 1,
+          print("You win!")
+          let ~playerScoreRef = ~playerScoreRef + 1
+        else print("Tie!")
+      end
+    end
   end
   
   print()
