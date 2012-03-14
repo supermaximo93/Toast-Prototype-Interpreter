@@ -6,13 +6,13 @@ let recursive_fib(n) =
   // bear in mind that functions have global scope. Next version will probably have scope with functions
   let pos_fib(n) = if n < 2, n else pos_fib(n - 1) + pos_fib(n - 2)
   
-  let is_negative = if n < 0, yes else no
+  let is_negative = n < 0
   let n = pos_fib|n|
   if is_negative, -n else n
 end
 
 let iterative_fib(n) =
-  let is_negative = if n < 0, yes else no
+  let is_negative = n < 0
   let n = |n|
   
   let first = 0

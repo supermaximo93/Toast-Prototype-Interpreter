@@ -5,17 +5,17 @@
 let x = 1
 let y = 2
 
-let is_x_greater = if x > y, yes else no
-print(is_x_greater) // prints no
+let is_x_greater = if x > y, "yes, x is greater" else "no, y is greater or equal"
+print(is_x_greater) // prints 'no, y is greater or equal'
 
 let is_y_less = if y < x,
   print("y is less than x")
-  yes
+  "yes, x is greater"
 else
   print("y is greater or equal to x")
-  no
+  "no, y is greater or equal"
 end
-print(is_y_less) // prints no
+print(is_y_less) // prints 'no, y is greater or equal'
 
 let i = 0
 let x = while i < 10, let i = i + 1
